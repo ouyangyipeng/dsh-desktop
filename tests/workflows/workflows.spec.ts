@@ -84,7 +84,7 @@ describe('packaging command documentation', () => {
   it('never collides with pnpm built-in pack', async () => {
     for (const name of [
       'README.md',
-      'README.zh.md',
+      'README.en.md',
       'docs/development.md',
       'docs/superpowers/plans/2026-08-14-dsh-desktop-standalone-implementation.md',
     ]) {

@@ -13,6 +13,10 @@ const REQUIRED_HTML = [
   'unofficial',
   'desktopCommit',
   'upstreamCommit',
+  'marketplaceVersion',
+  'dsh-marketplace',
+  'assets/desktop-marketplace.webp',
+  'href="en/"',
 ] as const
 
 /**
@@ -45,6 +49,10 @@ export async function checkSite(siteRoot: string = resolve(REPOSITORY_ROOT, 'sit
   const particles = sources.get('particles.js') ?? ''
   if (!particles.includes('prefers-reduced-motion')) issues.push('particles.js is missing reduced-motion detection')
   if (!particles.includes('visibilitychange')) issues.push('particles.js is missing background-tab suspension')
+  if (!particles.includes("addEventListener('pointermove'")) issues.push('particles.js is missing pointer interaction')
+  if (!particles.includes('pointer.velocity')) issues.push('particles.js is missing pointer velocity')
+  if (!particles.includes('wakeParticles')) issues.push('particles.js is missing pointer wake particles')
+  if (!particles.includes('Math.min(devicePixelRatio || 1, 1.75)')) issues.push('particles.js is missing DPR cap')
 
   for (const reference of html.matchAll(/\b(?:href|src)=["']([^"']+)["']/giu)) {
     const target = reference[1] as string

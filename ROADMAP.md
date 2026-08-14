@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 19:33 CST
+
+- Change: Completed the v0.2.0 Marketplace bundle, three-source metadata, DSH-token Marketplace surfaces, Chinese-first bilingual entry points, original Desktop identity, real runtime media, and pointer-reactive Pages site.
+- Files: `plugins/dsh-marketplace`, `src/`, `scripts/`, `config/`, `README.md`, `README.en.md`, `assets/`, `site/`, `tests/`.
+- Decision: Keep installed runtimes immutable and update both official Harness and Marketplace only through reviewed, target-native Desktop releases; use the richer particle treatment only on the product site while the in-app Marketplace follows DSH design tokens.
+
 ## 2026-08-14 18:32 CST
 
 - Change: Added the executable v0.2.0 plan for Marketplace identity, offline staging, immutable overlay launch, three-source metadata, Chinese-first entry points, original assets, real screenshots, pointer-reactive Pages, and installer verification.
