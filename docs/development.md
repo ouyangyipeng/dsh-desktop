@@ -90,7 +90,7 @@ Mount the produced DMG read-only, then pass the exact mounted application path:
 pnpm smoke:packaged -- "/Volumes/DS-Harness Desktop/DS-Harness Desktop.app"
 ```
 
-The smoke mode uses a temporary application-data root, launches the packaged executable, waits for `runtime.ready`, requests a normal quit, verifies graceful child termination, and removes its temporary data. It does not use a developer checkout of the upstream CLI.
+The smoke mode uses a temporary application-data root, launches the packaged executable, waits for `runtime.ready`, requests a normal quit, verifies one successful target-native process-tree termination, and removes its temporary data. It does not use a developer checkout of the upstream CLI.
 
 ## Site
 

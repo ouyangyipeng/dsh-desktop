@@ -16,7 +16,7 @@ Desktop main process
 
 `RuntimeSupervisor` owns exactly one child lifetime. Startup has one deadline covering the readiness line and HTTP probe. Output is retained in bounded UTF-8 tails. A normal application quit first requests graceful termination, waits for the configured deadline, and then requests forced process-tree termination if the child is still alive. Startup failures and unexpected exits transition to a local recovery document; Retry relaunches the whole application so a failed supervisor is never reused.
 
-The packaged app uses Electron's executable in Node mode to launch the staged CLI. On POSIX systems the child has an owned process group, so termination addresses the process tree. Windows uses `taskkill.exe /PID … /T`, with `/F` only for the second termination request.
+The packaged app uses Electron's executable in Node mode to launch the staged CLI. On POSIX systems the child has an owned process group, so termination addresses the process tree with `SIGTERM` before `SIGKILL`. Windows has no equivalent graceful signal for an owned process tree, so each bounded shutdown request uses `taskkill.exe /PID … /T /F`; the PID remains restricted to the child started by Desktop.
 
 ## Source and artifact planes
 

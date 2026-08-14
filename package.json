@@ -1,7 +1,7 @@
 {
   "name": "dsh-desktop",
   "productName": "DS-Harness Desktop",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Desktop launcher and runtime supervisor for DeepSeek Harness",
   "private": true,
   "type": "module",

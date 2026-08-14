@@ -14,7 +14,7 @@ export type ProcessTreeTermination = {
 /**
  * Resolve a termination request for the owned process group or Windows tree.
  * @param pid Positive operating-system process identifier.
- * @param force Whether the graceful deadline has elapsed.
+ * @param force Whether the POSIX graceful deadline has elapsed; Windows has no signal-equivalent tree request.
  * @param platform Target operating system.
  * @returns A request that targets descendants as well as the carrier.
  */
@@ -24,7 +24,7 @@ export function resolveProcessTreeTermination(pid: number, force: boolean, platf
     return {
       kind: 'taskkill',
       command: 'taskkill.exe',
-      args: ['/PID', String(pid), '/T', ...(force ? ['/F'] : [])],
+      args: ['/PID', String(pid), '/T', '/F'],
     }
   }
   return { kind: 'signal', pid: -pid, signal: force ? 'SIGKILL' : 'SIGTERM' }

@@ -15,11 +15,11 @@ describe('process tree termination', () => {
     })
   })
 
-  it('targets the complete Windows process tree and forces only the second request', () => {
+  it('force-terminates the complete Windows process tree on either request', () => {
     expect(resolveProcessTreeTermination(4242, false, 'win32')).toEqual({
       kind: 'taskkill',
       command: 'taskkill.exe',
-      args: ['/PID', '4242', '/T'],
+      args: ['/PID', '4242', '/T', '/F'],
     })
     expect(resolveProcessTreeTermination(4242, true, 'win32')).toEqual({
       kind: 'taskkill',

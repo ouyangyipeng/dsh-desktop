@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 17:15 CST
+
+- Change: Changed Windows runtime shutdown to issue one immediate, PID-scoped `taskkill /T /F` request, documented its platform semantics, covered both supervisor termination attempts, and advanced the release version to `0.1.5`.
+- Files: `src/main/process-tree.ts`, `tests/main/process-tree.spec.ts`, `docs/architecture.md`, `docs/development.md`, `package.json`, `site/index.html`, `site/assets/desktop-preview.svg`.
+- Decision: Root cause category — technical blind spot. The packaged x64 application and Harness reached `runtime.ready`, but `taskkill /T` could not stop the headless Windows process; the supervisor waited ten seconds and escalated, correctly failing the smoke as `forced=true`. Node documents that Windows `SIGTERM` is unconditional rather than graceful, so a POSIX-style two-level tree shutdown is not available. Prevention: define Windows shutdown by one bounded owned-tree termination, retain the second supervisor request only as an idempotent fallback, and require the packaged log to prove `runtime.stopped forced=false`.
+
 ## 2026-08-14 16:53 CST
 
 - Change: Made target checkout tests platform-semantic by normalizing the smoke root with the host path implementation, comparing snapshots with canonical LF endings, accepting Windows' non-zero runtime termination code after a single successful stop, and advancing the release version to `0.1.4`.
