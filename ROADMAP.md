@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 15:18 CST
+
+- Change: Started implementation on `feat/standalone-desktop`, recorded the official Harness gitlink, and added the root toolchain, repository policy, license, notices, and stage plan.
+- Files: `.gitmodules`, `upstream/deepseek-harness`, `.gitignore`, `AGENTS.md`, `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `vitest.config.ts`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `plan/00-v1-standalone-desktop-implementation.md`.
+- Decision: Build a self-contained root project while treating the official submodule as read-only source input.
+
 ## 2026-08-14 15:08 CST
 
 - Change: Added the executable standalone implementation plan covering the pinned runtime, Desktop supervisor, recovery UI, product site, automation, installer smoke, and GitHub migration.
