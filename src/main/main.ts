@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import {
   app,
   BrowserWindow,
+  clipboard,
   dialog,
   Menu,
   shell,
@@ -18,14 +19,16 @@ import {
   createElectronRuntimeSupervisor,
   embeddedNodeRuntimeChildFactory,
 } from './electron-runtime-child.ts'
-import { FileDesktopLogger } from './logging.ts'
+import { FileDesktopLogger, redactLogText } from './logging.ts'
 import {
   DesktopLifecycle,
   type DesktopAppPort,
   type DesktopWindowPort,
 } from './main-lifecycle.ts'
 import { buildDesktopMenuTemplate, type DesktopMenuItem } from './menu.ts'
+import { parseRecoveryAction, renderRecoveryPage, type RecoveryAction } from './recovery-page.ts'
 import { checkForUpdates, type UpdateCheckResult } from './update-checker.ts'
+import { checkUpstreamStatus, type UpstreamCheckResult } from './upstream-checker.ts'
 import { packagedSmokeRoot } from './smoke-mode.ts'
 import {
   desktopWindowOptions,
@@ -56,6 +59,7 @@ const logsDirectory = app.getPath('logs')
 const logger = new FileDesktopLogger(join(logsDirectory, 'desktop.log'))
 let buildMetadata = developmentBuildMetadata(app.getVersion())
 let updateInProgress = false
+let harnessUpdateInProgress = false
 let sessionSecurityInstalled = false
 const lifecycleReference: { current?: DesktopLifecycle } = {}
 
@@ -187,6 +191,9 @@ function electronAppPort(): DesktopAppPort {
     quit: () => {
       app.quit()
     },
+    relaunch: () => {
+      app.relaunch()
+    },
     exit: (code) => {
       app.exit(code)
     },
@@ -198,6 +205,9 @@ function installApplicationMenu(): void {
     checkForUpdates: () => {
       void performUpdateCheck()
     },
+    checkHarnessUpdates: () => {
+      void performHarnessUpdateCheck()
+    },
     showAbout: () => {
       void showAbout()
     },
@@ -207,8 +217,44 @@ function installApplicationMenu(): void {
     quit: () => {
       lifecycle.requestQuit()
     },
-  }, { updateInProgress }, process.platform)
+  }, { updateInProgress, harnessUpdateInProgress }, process.platform)
   Menu.setApplicationMenu(Menu.buildFromTemplate(template.map(toElectronMenuItem)))
+}
+
+async function performHarnessUpdateCheck(): Promise<void> {
+  if (harnessUpdateInProgress) return
+  harnessUpdateInProgress = true
+  installApplicationMenu()
+  logger.record('upstream-update.started')
+  try {
+    const result = await checkUpstreamStatus(fetch, buildMetadata.upstreamCommit)
+    logger.record('upstream-update.finished', { state: result.state })
+    await showHarnessUpdateResult(result)
+  } finally {
+    harnessUpdateInProgress = false
+    installApplicationMenu()
+  }
+}
+
+async function showHarnessUpdateResult(result: UpstreamCheckResult): Promise<void> {
+  if (result.state === 'current') {
+    await dialog.showMessageBox({ type: 'info', title: 'Harness Updates', message: 'The bundled DeepSeek Harness revision matches the official default branch.' })
+    return
+  }
+  if (result.state === 'newer') {
+    const response = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Harness Update Available',
+      message: 'The official Harness repository has a newer revision.',
+      detail: `Bundled: ${result.currentCommit.slice(0, 12)}\nOfficial: ${result.latestCommit.slice(0, 12)}\n\nInstalled runtimes update only through a verified Desktop release.`,
+      buttons: ['Open Official Commit', 'Close'],
+      defaultId: 0,
+      cancelId: 1,
+    })
+    if (response.response === 0) await shell.openExternal(result.commitUrl.href)
+    return
+  }
+  await dialog.showMessageBox({ type: 'warning', title: 'Harness Updates', message: result.message })
 }
 
 function toElectronMenuItem(item: DesktopMenuItem): MenuItemConstructorOptions {
@@ -275,7 +321,7 @@ async function showAbout(): Promise<void> {
     type: 'info',
     title: 'About DS-Harness Desktop',
     message: `DS-Harness Desktop ${buildMetadata.version}`,
-    detail: `Desktop commit: ${buildMetadata.desktopCommit}\nUpstream commit: ${buildMetadata.upstreamCommit}`,
+    detail: `Desktop commit: ${buildMetadata.desktopCommit}\nUpstream repository: ${buildMetadata.upstreamRepository}\nUpstream commit: ${buildMetadata.upstreamCommit}\nTarget: ${buildMetadata.platform}/${buildMetadata.arch}`,
   })
 }
 
@@ -286,14 +332,69 @@ async function openLogsFolder(): Promise<void> {
   await dialog.showMessageBox({ type: 'warning', title: 'Open Logs Folder', message: 'The logs folder could not be opened.' })
 }
 
-async function showRuntimeFatal(code: number): Promise<void> {
-  if (smokeRoot !== undefined) return
-  await dialog.showMessageBox({
-    type: 'error',
-    title: 'DS-Harness Desktop',
-    message: code === -1 ? 'DS-Harness Desktop could not start.' : 'The DS-Harness runtime stopped unexpectedly.',
-    detail: code === -1 ? 'Open the logs folder for startup diagnostics.' : `Runtime exit code: ${String(code)}. The application will close.`,
+async function showRuntimeFatal(code: number): Promise<'retry' | 'quit'> {
+  if (smokeRoot !== undefined) return 'quit'
+  const diagnostics = runtime.diagnostics()
+  const diagnosticText = redactLogText(`stdout:\n${diagnostics.stdout}\n\nstderr:\n${diagnostics.stderr}`)
+  return await showRecoveryWindow({
+    title: code === -1 ? 'DS-Harness Desktop could not start' : 'The DS-Harness runtime stopped',
+    message: code === -1 ? 'Review the diagnostics, correct the configuration if needed, then retry with a fresh runtime.' : `Runtime exit code ${String(code)}. Retry starts a fresh application process.`,
+    diagnostics: diagnosticText,
   })
+}
+
+async function showRecoveryWindow(input: { readonly title: string; readonly message: string; readonly diagnostics: string }): Promise<'retry' | 'quit'> {
+  const window = new BrowserWindow(desktopWindowOptions())
+  if (!sessionSecurityInstalled) {
+    installSessionSecurity(electronSessionPort(window))
+    sessionSecurityInstalled = true
+  }
+  const html = renderRecoveryPage({ ...input, version: buildMetadata.version, upstreamCommit: buildMetadata.upstreamCommit })
+  const pageUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
+  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  window.webContents.on('will-attach-webview', event => event.preventDefault())
+  return await new Promise<'retry' | 'quit'>((resolve) => {
+    let settled = false
+    const finish = (decision: 'retry' | 'quit'): void => {
+      if (settled) return
+      settled = true
+      resolve(decision)
+      if (!window.isDestroyed()) window.close()
+    }
+    window.webContents.on('will-navigate', (event, target) => {
+      if (target === pageUrl) return
+      event.preventDefault()
+      const action = parseRecoveryAction(target)
+      if (action !== undefined) void handleRecoveryAction(action, input.diagnostics, finish)
+    })
+    window.once('closed', () => finish('quit'))
+    window.once('ready-to-show', () => window.show())
+    void window.loadURL(pageUrl).catch((error: unknown) => {
+      logger.record('recovery.load.failed', { message: error instanceof Error ? error.message : 'unknown failure' })
+      finish('quit')
+    })
+  })
+}
+
+async function handleRecoveryAction(
+  action: RecoveryAction,
+  diagnostics: string,
+  finish: (decision: 'retry' | 'quit') => void,
+): Promise<void> {
+  if (action === 'retry' || action === 'quit') {
+    finish(action)
+    return
+  }
+  if (action === 'copy-diagnostics') {
+    clipboard.writeText(redactLogText(diagnostics))
+    return
+  }
+  if (action === 'open-logs') {
+    const error = await shell.openPath(logsDirectory)
+    if (error !== '') logger.record('logs.open.failed', { message: error })
+    return
+  }
+  await shell.openExternal('https://github.com/ouyangyipeng/dsh-desktop#installation')
 }
 
 async function showRendererGone(): Promise<'reload' | 'quit'> {

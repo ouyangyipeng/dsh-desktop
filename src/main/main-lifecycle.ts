@@ -23,6 +23,8 @@ export interface DesktopAppPort {
   onBeforeQuit(listener: (event: QuitEvent) => void): void
   /** Request the ordinary Electron quit sequence. */
   quit(): void
+  /** Schedule one fresh application process after orderly shutdown. */
+  relaunch(): void
   /** End the process after owned asynchronous cleanup. */
   exit(code: number): void
 }
@@ -67,8 +69,8 @@ export interface DesktopLifecycleOptions {
   readonly prepare: () => Promise<void>
   /** Construct a new hardened renderer window for the existing runtime. */
   readonly createWindow: (origin: URL) => DesktopWindowPort
-  /** Show a generic runtime failure dialog for an exit code. */
-  readonly showRuntimeFatal: (code: number) => Promise<void>
+  /** Show a recoverable runtime failure window for an exit code. */
+  readonly showRuntimeFatal: (code: number) => Promise<'retry' | 'quit'>
   /** Ask whether a lost renderer should reload or quit. */
   readonly showRendererGone: () => Promise<'reload' | 'quit'>
 }
@@ -115,9 +117,10 @@ export class DesktopLifecycle {
     } catch (error: unknown) {
       if (this.isShutdownStarted()) return false
       this.recordError('application.start.failed', error)
-      await this.safeRuntimeFatal(-1)
+      const decision = await this.safeRuntimeFatal(-1)
+      if (decision === 'retry') this.options.app.relaunch()
       await this.safeFlush()
-      this.options.app.exit(1)
+      this.options.app.exit(decision === 'retry' ? 0 : 1)
       return false
     }
   }
@@ -134,13 +137,14 @@ export class DesktopLifecycle {
   handleUnexpectedRuntimeExit(exit: UnexpectedRuntimeExit): void {
     if (this.runtimeFatalShown) return
     this.runtimeFatalShown = true
-    this.failureExitRequested = true
     this.options.logger.record('runtime.unexpected-exit', {
       code: exit.code,
       stdout: exit.diagnostics.stdout,
       stderr: exit.diagnostics.stderr,
     })
-    void this.safeRuntimeFatal(exit.code).finally(() => {
+    void this.safeRuntimeFatal(exit.code).then((decision) => {
+      this.failureExitRequested = decision === 'quit'
+      if (decision === 'retry') this.options.app.relaunch()
       this.options.app.quit()
     })
   }
@@ -237,11 +241,12 @@ export class DesktopLifecycle {
     this.options.app.exit(exitCode)
   }
 
-  private async safeRuntimeFatal(code: number): Promise<void> {
+  private async safeRuntimeFatal(code: number): Promise<'retry' | 'quit'> {
     try {
-      await this.options.showRuntimeFatal(code)
+      return await this.options.showRuntimeFatal(code)
     } catch (error: unknown) {
       this.recordError('runtime.dialog.failed', error)
+      return 'quit'
     }
   }
 

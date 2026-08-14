@@ -14,6 +14,7 @@ interface MenuNode {
 function actions(): DesktopMenuActions {
   return {
     checkForUpdates: vi.fn(),
+    checkHarnessUpdates: vi.fn(),
     showAbout: vi.fn(),
     openLogsFolder: vi.fn(),
     quit: vi.fn(),
@@ -27,9 +28,10 @@ function flatten(nodes: readonly MenuNode[]): readonly MenuNode[] {
 describe('desktop application menu', () => {
   it.each(['darwin', 'win32'] as const)('contains product, diagnostics, edit, window, and quit actions on %s', (platform) => {
     const menuActions = actions()
-    const nodes = flatten(buildDesktopMenuTemplate(menuActions, { updateInProgress: false }, platform))
+    const nodes = flatten(buildDesktopMenuTemplate(menuActions, { updateInProgress: false, harnessUpdateInProgress: false }, platform))
 
     expect(nodes.some(node => node.label === 'Check for Updates…')).toBe(true)
+    expect(nodes.some(node => node.label === 'Check Harness Updates…')).toBe(true)
     expect(nodes.some(node => node.label === 'About DS-Harness Desktop')).toBe(true)
     expect(nodes.some(node => node.label === 'Open Logs Folder')).toBe(true)
     expect(nodes.some(node => node.label === 'Quit DS-Harness Desktop')).toBe(true)
@@ -38,18 +40,21 @@ describe('desktop application menu', () => {
     expect(nodes.some(node => node.role === 'minimize')).toBe(true)
 
     nodes.find(node => node.label === 'Check for Updates…')?.click?.()
+    nodes.find(node => node.label === 'Check Harness Updates…')?.click?.()
     nodes.find(node => node.label === 'About DS-Harness Desktop')?.click?.()
     nodes.find(node => node.label === 'Open Logs Folder')?.click?.()
     nodes.find(node => node.label === 'Quit DS-Harness Desktop')?.click?.()
     expect(menuActions.checkForUpdates).toHaveBeenCalledOnce()
+    expect(menuActions.checkHarnessUpdates).toHaveBeenCalledOnce()
     expect(menuActions.showAbout).toHaveBeenCalledOnce()
     expect(menuActions.openLogsFolder).toHaveBeenCalledOnce()
     expect(menuActions.quit).toHaveBeenCalledOnce()
   })
 
   it('disables the update action while the same check is in progress', () => {
-    const nodes = flatten(buildDesktopMenuTemplate(actions(), { updateInProgress: true }, 'darwin'))
+    const nodes = flatten(buildDesktopMenuTemplate(actions(), { updateInProgress: true, harnessUpdateInProgress: true }, 'darwin'))
 
     expect(nodes.find(node => node.label === 'Check for Updates…')?.enabled).toBe(false)
+    expect(nodes.find(node => node.label === 'Check Harness Updates…')?.enabled).toBe(false)
   })
 })

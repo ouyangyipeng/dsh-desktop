@@ -2,6 +2,8 @@
 export interface DesktopMenuActions {
   /** Start one advisory GitHub Release check. */
   readonly checkForUpdates: () => void
+  /** Check the official Harness default branch without mutating the runtime. */
+  readonly checkHarnessUpdates: () => void
   /** Show product and build identity. */
   readonly showAbout: () => void
   /** Reveal the application-owned log directory. */
@@ -14,6 +16,8 @@ export interface DesktopMenuActions {
 export interface DesktopMenuState {
   /** Whether one update request is already active. */
   readonly updateInProgress: boolean
+  /** Whether one official Harness status request is active. */
+  readonly harnessUpdateInProgress: boolean
 }
 
 /** Electron-compatible subset used to define the native menu without runtime imports. */
@@ -45,6 +49,7 @@ export function buildDesktopMenuTemplate(
       { label: 'About DS-Harness Desktop', click: actions.showAbout },
       { type: 'separator' },
       updateItem(actions, state),
+      harnessUpdateItem(actions, state),
       { label: 'Open Logs Folder', click: actions.openLogsFolder },
       { type: 'separator' },
       { label: 'Quit DS-Harness Desktop', accelerator: platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4', click: actions.quit },
@@ -77,11 +82,19 @@ export function buildDesktopMenuTemplate(
   }
   if (platform === 'darwin') return [productMenu, editMenu, windowMenu]
   return [
-    { label: 'File', submenu: [updateItem(actions, state), { label: 'Open Logs Folder', click: actions.openLogsFolder }, { type: 'separator' }, { label: 'Quit DS-Harness Desktop', click: actions.quit }] },
+    { label: 'File', submenu: [updateItem(actions, state), harnessUpdateItem(actions, state), { label: 'Open Logs Folder', click: actions.openLogsFolder }, { type: 'separator' }, { label: 'Quit DS-Harness Desktop', click: actions.quit }] },
     editMenu,
     windowMenu,
     { label: 'Help', submenu: [{ label: 'About DS-Harness Desktop', click: actions.showAbout }] },
   ]
+}
+
+function harnessUpdateItem(actions: DesktopMenuActions, state: DesktopMenuState): DesktopMenuItem {
+  return {
+    label: 'Check Harness Updates…',
+    enabled: !state.harnessUpdateInProgress,
+    click: actions.checkHarnessUpdates,
+  }
 }
 
 function updateItem(actions: DesktopMenuActions, state: DesktopMenuState): DesktopMenuItem {

@@ -21,6 +21,7 @@ function deferred<T>(): Deferred<T> {
 class FakeApp implements DesktopAppPort {
   lock = true
   quitCount = 0
+  relaunchCount = 0
   readonly exitCodes: number[] = []
   readonly listeners = {
     secondInstance: [] as Array<() => void>,
@@ -53,6 +54,10 @@ class FakeApp implements DesktopAppPort {
 
   quit(): void {
     this.quitCount += 1
+  }
+
+  relaunch(): void {
+    this.relaunchCount += 1
   }
 
   exit(code: number): void {
@@ -149,7 +154,7 @@ function harness(platform: NodeJS.Platform = 'darwin', stopResult: Promise<{ for
     }),
     stop: vi.fn(async () => await stopResult),
   }
-  const showRuntimeFatal = vi.fn(async () => {})
+  const showRuntimeFatal = vi.fn(async (): Promise<'retry' | 'quit'> => 'quit')
   const showRendererGone = vi.fn(async (): Promise<'reload' | 'quit'> => 'reload')
   const lifecycle = new DesktopLifecycle({
     app,
@@ -191,6 +196,18 @@ describe('desktop main lifecycle', () => {
     expect(context.windows[0]?.showCount).toBe(0)
     context.windows[0]?.ready()
     expect(context.windows[0]?.showCount).toBe(1)
+  })
+
+  it('relaunches a fresh process when startup recovery requests retry', async () => {
+    const context = harness()
+    context.runtime.start.mockRejectedValueOnce(new Error('runtime unavailable'))
+    context.showRuntimeFatal.mockResolvedValueOnce('retry')
+
+    await expect(context.lifecycle.start()).resolves.toBe(false)
+
+    expect(context.showRuntimeFatal).toHaveBeenCalledWith(-1)
+    expect(context.app.relaunchCount).toBe(1)
+    expect(context.app.exitCodes).toEqual([0])
   })
 
   it('restores and focuses the existing window for a second instance', async () => {

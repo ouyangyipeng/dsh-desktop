@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 15:40 CST
+
+- Change: Replaced fatal startup dialogs with a script-free recovery page, added fresh-process retry, expanded About metadata, and separated Desktop Release checks from official Harness revision checks.
+- Files: `src/main/recovery-page.ts`, `src/main/upstream-checker.ts`, `src/main/main.ts`, `src/main/main-lifecycle.ts`, `src/main/menu.ts`, `tests/main/`.
+- Decision: Keep installed runtimes immutable; a Harness status check reports official source movement, while only a verified Desktop Release changes packaged code. Recovery actions remain main-process allowlisted and diagnostics are redacted before rendering or copying.
+
 ## 2026-08-14 15:34 CST
 
 - Change: Added submodule identity checks, CI-safe upstream bootstrap, Git-derived build metadata, production-closure materialization, native packaging configuration, packaged smoke support, and real Web runtime snapshot coverage.
