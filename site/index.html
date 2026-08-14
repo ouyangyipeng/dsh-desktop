@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DS-Harness Desktop is an unofficial desktop launcher and runtime supervisor for DeepSeek Harness.">
+    <meta name="theme-color" content="#070a0f">
+    <title>DS-Harness Desktop</title>
+    <link rel="icon" href="assets/dsh-mark.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <canvas id="particle-field" aria-hidden="true"></canvas>
+    <div class="atmosphere" aria-hidden="true"><span></span><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="DS-Harness Desktop home">
+        <img src="assets/dsh-mark.svg" width="36" height="36" alt="">
+        <span>dsh-desktop</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#download">Download</a>
+      </nav>
+      <a class="header-github" href="https://github.com/ouyangyipeng/dsh-desktop">GitHub <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="hero-copy">
+          <p class="kicker"><span></span> Desktop runtime for DeepSeek Harness</p>
+          <h1>The shortest path<br>from <em>clone</em> to <em>run</em>.</h1>
+          <p class="hero-lede">Launch the standard Harness Web experience as a native application. No repository setup, no startup command, no separate browser.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://github.com/ouyangyipeng/dsh-desktop/releases/latest">Download for macOS</a>
+            <a class="button button-secondary" href="https://github.com/ouyangyipeng/dsh-desktop/releases/latest">Download for Windows</a>
+          </div>
+          <p class="compatibility">v0.1.1 · macOS Apple Silicon · Windows ARM64 / x64</p>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
+          <span class="particle p-one"></span><span class="particle p-two"></span><span class="particle p-three"></span>
+        </div>
+      </section>
+
+      <section class="preview section-shell" aria-labelledby="preview-title">
+        <div class="section-heading">
+          <p class="kicker">One local application</p>
+          <h2 id="preview-title">The shell stays thin.<br>The Harness stays whole.</h2>
+        </div>
+        <div class="window-frame">
+          <img src="assets/desktop-preview.svg" alt="DS-Harness Desktop showing a ready local Harness runtime">
+          <div class="runtime-badge"><span></span><strong>runtime.ready</strong><small>127.0.0.1 · private loopback</small></div>
+        </div>
+      </section>
+
+      <section id="features" class="features section-shell" aria-labelledby="features-title">
+        <div class="section-heading narrow">
+          <p class="kicker">Desktop responsibilities</p>
+          <h2 id="features-title">Native where it matters.<br>Upstream where it counts.</h2>
+        </div>
+        <div class="feature-list">
+          <article><span class="index">01</span><h3>One-click launch</h3><p>Starts the standard <code>dsh web</code> profile, waits for readiness, then opens the owned loopback origin.</p></article>
+          <article><span class="index">02</span><h3>Runtime supervision</h3><p>Owns bounded logs, crash recovery, process-tree shutdown, isolated data, and explicit diagnostics.</p></article>
+          <article><span class="index">03</span><h3>Traceable upstream</h3><p>Every build records both the Desktop commit and the exact official Harness submodule commit.</p></article>
+          <article><span class="index">04</span><h3>Safe updates</h3><p>Checks Desktop Releases and official Harness movement separately. Installed code changes only through a verified installer.</p></article>
+        </div>
+      </section>
+
+      <section id="architecture" class="architecture section-shell" aria-labelledby="architecture-title">
+        <div class="architecture-copy">
+          <p class="kicker">Architecture</p>
+          <h2 id="architecture-title">Everything remains a plugin.</h2>
+          <p>Desktop does not fork the agent, LLM, loop, plugins, sessions, or Web UI. It creates the native process and window that host the official assembled runtime.</p>
+          <a href="https://github.com/deepseek-ai/deepseek-harness">Visit deepseek-ai/deepseek-harness <span aria-hidden="true">↗</span></a>
+        </div>
+        <ol class="runtime-flow" aria-label="Desktop runtime flow">
+          <li><span>01</span><div><strong>Desktop supervisor</strong><small>Electron lifecycle · native installer</small></div></li>
+          <li><span>02</span><div><strong>Pinned runtime</strong><small>Immutable production closure</small></div></li>
+          <li><span>03</span><div><strong>dsh web</strong><small>Official profile · standard plugin loader</small></div></li>
+          <li><span>04</span><div><strong>Local Web UI</strong><small>Exact owned loopback origin</small></div></li>
+        </ol>
+      </section>
+
+      <section class="identity section-shell" aria-label="Build identity">
+        <div><small>desktopVersion</small><strong>0.1.1</strong></div>
+        <div><small>desktopCommit</small><strong>release tag</strong></div>
+        <div><small>upstreamCommit</small><strong>47f943859bef</strong></div>
+        <div><small>upstreamMode</small><strong>git submodule</strong></div>
+      </section>
+
+      <section id="download" class="download section-shell" aria-labelledby="download-title">
+        <div>
+          <p class="kicker">Developer preview</p>
+          <h2 id="download-title">Put Harness in your Dock.</h2>
+          <p>The first release line is unsigned. macOS and Windows show a one-time trust prompt; the installation guide keeps the exception scoped to this application.</p>
+        </div>
+        <div class="download-actions">
+          <a class="download-card" href="https://github.com/ouyangyipeng/dsh-desktop/releases/latest"><span>macOS</span><strong>Download DMG</strong><small>Apple Silicon · unsigned</small></a>
+          <a class="download-card" href="https://github.com/ouyangyipeng/dsh-desktop/releases/latest"><span>Windows</span><strong>Download EXE</strong><small>ARM64 / x64 · unsigned</small></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="section-shell">
+      <div class="brand footer-brand"><img src="assets/dsh-mark.svg" width="30" height="30" alt=""><span>DS-Harness Desktop</span></div>
+      <p>Unofficial, community-maintained software. Not an official DeepSeek release.</p>
+      <div><a href="https://github.com/ouyangyipeng/dsh-desktop">Source</a><a href="https://github.com/topics/dsh-plugin">dsh-plugin community</a><a href="https://www.deepseek.com/harness/">Official Harness site</a></div>
+    </footer>
+    <script type="module" src="particles.js"></script>
+  </body>
+</html>

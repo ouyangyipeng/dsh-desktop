@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 15:50 CST
+
+- Change: Added the bilingual product README, architecture, development and release documentation, plus a self-contained Midnight Particle GitHub Pages site with responsive and reduced-motion behavior.
+- Files: `README.md`, `README.zh.md`, `docs/architecture.md`, `docs/development.md`, `docs/releasing.md`, `site/`, `scripts/check-site.ts`, `tests/site/site.spec.ts`.
+- Decision: Present Desktop as an unofficial distribution companion with explicit upstream identity; keep the site dependency-free and prohibit remote visual assets so Pages remains auditable and durable.
+
 ## 2026-08-14 15:40 CST
 
 - Change: Replaced fatal startup dialogs with a script-free recovery page, added fresh-process retry, expanded About metadata, and separated Desktop Release checks from official Harness revision checks.
