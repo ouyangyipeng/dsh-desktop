@@ -14,6 +14,7 @@ import {
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const BUILT_CLI = join(REPOSITORY_ROOT, 'dist/stage/node_modules/@deepseek-ai/dsh/lib/bin.js')
+const DESKTOP_PATCH = join(REPOSITORY_ROOT, 'dist/stage/dsh-desktop.patch.yml')
 const EXPECTED_TRANSCRIPT = new URL('./fixtures/desktop-runtime.expected.txt', import.meta.url)
 const SECRET_ENVIRONMENT_NAME = /(?:^|_)(?:API_KEY|TOKEN|PASSWORD|SECRET)(?:_|$)/u
 
@@ -82,8 +83,11 @@ describe('assembled desktop runtime', () => {
     const runtimeRoot = await mkdtemp(join(tmpdir(), 'dsh-desktop-snapshot-'))
     let child: NodeRuntimeChild | undefined
     let frontendReady = false
+    let marketplaceHostReady = false
+    let marketplaceClientReady = false
     const runtime = new RuntimeSupervisor({
       entry: BUILT_CLI,
+      patchPath: DESKTOP_PATCH,
       cwd: runtimeRoot,
       env: keylessEnvironment(runtimeRoot),
       childFactory: (input) => {
@@ -97,6 +101,14 @@ describe('assembled desktop runtime', () => {
           throw new Error(`desktop Web root was not ready: HTTP ${String(response.status)}`)
         }
         frontendReady = true
+        const bootstrapResponse = await fetch(new URL('/dsh-marketplace/v1/bootstrap', origin), { signal })
+        const bootstrap = await bootstrapResponse.json() as { bundledRepositories?: unknown }
+        marketplaceHostReady = bootstrapResponse.status === 200
+          && Array.isArray(bootstrap.bundledRepositories)
+          && bootstrap.bundledRepositories.includes('ouyangyipeng/dsh-marketplace')
+        const clientResponse = await fetch(new URL('/plugins/dsh-marketplace/client.js', origin), { signal })
+        const clientSource = await clientResponse.text()
+        marketplaceClientReady = clientResponse.status === 200 && clientSource.includes('dsh-marketplace')
       },
       startupTimeoutMs: 60_000,
       stopTimeoutMs: 15_000,
@@ -109,6 +121,8 @@ describe('assembled desktop runtime', () => {
       transcript.push(`host=${started.origin.hostname}`)
       transcript.push(`port=${started.origin.port === '' ? 'missing' : 'operating-system-selected'}`)
       transcript.push(`frontend=${frontendReady ? 'ready' : 'not-ready'}`)
+      transcript.push(`marketplace-host=${marketplaceHostReady ? 'bundled' : 'missing'}`)
+      transcript.push(`marketplace-client=${marketplaceClientReady ? 'ready' : 'missing'}`)
       const stopped = await runtime.stop()
       const exitCode = child === undefined ? -1 : await child.exited
       const expectedExit = exitCode === 0 || process.platform === 'win32'

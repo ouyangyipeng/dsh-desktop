@@ -26,6 +26,8 @@ const DEFAULT_DIAGNOSTIC_MAX_BYTES = 64 * 1024
 export interface ElectronRuntimeSupervisorOptions {
   /** Isolated desktop DSH_HOME. */
   readonly desktopHarnessHome: string
+  /** Absolute Desktop-owned DSH overlay. */
+  readonly patchPath: string
   /** Runtime working directory; defaults to the isolated DSH_HOME. */
   readonly cwd?: string
   /** Optional application log consumer. */
@@ -146,6 +148,7 @@ export function createElectronRuntimeSupervisor(options: ElectronRuntimeSupervis
   return new RuntimeSupervisor({
     childFactory: options.runtimeChildFactory ?? electronRuntimeChildFactory,
     entry: resolveDshCliEntry(options.runtimeNodeModules),
+    patchPath: options.patchPath,
     cwd: options.cwd ?? options.desktopHarnessHome,
     env: inheritedRuntimeEnvironment(options.desktopHarnessHome),
     probe: probeRuntimeOrigin,

@@ -1,0 +1,8 @@
+- insert:
+    - id: dsh-marketplace
+      name: dsh-marketplace
+      config:
+        profile: web
+        cacheTtlMs: 600000
+        bundledRepositories:
+          - ouyangyipeng/dsh-marketplace
