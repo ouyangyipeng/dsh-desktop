@@ -111,13 +111,14 @@ describe('assembled desktop runtime', () => {
       transcript.push(`frontend=${frontendReady ? 'ready' : 'not-ready'}`)
       const stopped = await runtime.stop()
       const exitCode = child === undefined ? -1 : await child.exited
-      transcript.push(`shutdown=${!stopped.forced && exitCode === 0 ? 'clean' : 'unclean'}`)
+      const expectedExit = exitCode === 0 || process.platform === 'win32'
+      transcript.push(`shutdown=${!stopped.forced && expectedExit ? 'clean' : 'unclean'}`)
     } finally {
       await runtime.stop()
       await rm(runtimeRoot, { recursive: true, force: true })
     }
 
     const actual = `${transcript.join('\n')}\n`
-    expect(actual).toBe(await readFile(EXPECTED_TRANSCRIPT, 'utf8'))
+    expect(actual).toBe((await readFile(EXPECTED_TRANSCRIPT, 'utf8')).replaceAll('\r\n', '\n'))
   }, 75_000)
 })

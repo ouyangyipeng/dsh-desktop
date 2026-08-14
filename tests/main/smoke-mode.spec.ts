@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { packagedSmokeEnabled, packagedSmokeRoot } from '../../src/main/smoke-mode.ts'
 
@@ -13,7 +14,7 @@ describe('packaged smoke mode', () => {
     expect(packagedSmokeRoot(true, {
       DSH_DESKTOP_SMOKE: '1',
       DSH_DESKTOP_SMOKE_ROOT: '/tmp/dsh-desktop-smoke',
-    })).toBe('/tmp/dsh-desktop-smoke')
+    })).toBe(resolve('/tmp/dsh-desktop-smoke'))
     expect(packagedSmokeRoot(false, {
       DSH_DESKTOP_SMOKE: '1',
       DSH_DESKTOP_SMOKE_ROOT: 'ignored',

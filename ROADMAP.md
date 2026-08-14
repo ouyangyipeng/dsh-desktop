@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:53 CST
+
+- Change: Made target checkout tests platform-semantic by normalizing the smoke root with the host path implementation, comparing snapshots with canonical LF endings, accepting Windows' non-zero runtime termination code after a single successful stop, and advancing the release version to `0.1.4`.
+- Files: `tests/main/smoke-mode.spec.ts`, `tests/main/desktop-runtime.snapshot.ts`, `package.json`, `site/index.html`, `site/assets/desktop-preview.svg`.
+- Decision: Root cause category — technical blind spot. The release matrix was correctly running the assembled runtime test on native Windows, but three assertions encoded macOS filesystem, checkout newline, and POSIX signal-exit behavior. Prevention: distinguish supervisor stop success from platform process exit conventions, normalize text fixtures at read time, derive expected paths through `node:path`, and keep `desktop-v0.1.3` immutable as failed release evidence.
+
 ## 2026-08-14 16:39 CST
 
 - Change: Routed pnpm's Windows command shim through the explicit command interpreter recommended by Node.js, covered the complete executable and argument vector, and advanced the release version to `0.1.3` without rewriting `desktop-v0.1.2`.
