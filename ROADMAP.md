@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 18:32 CST
+
+- Change: Added the executable v0.2.0 plan for Marketplace identity, offline staging, immutable overlay launch, three-source metadata, Chinese-first entry points, original assets, real screenshots, pointer-reactive Pages, and installer verification.
+- Files: `docs/superpowers/plans/2026-08-14-marketplace-bundle-branding.md`.
+- Decision: Consume only the released Marketplace commit, keep the official Harness and user profile untouched, and require assembled plus packaged evidence before publication.
+
 ## 2026-08-14 18:24 CST
 
 - Change: Approved the pinned Marketplace bundle, three-commit build identity, Chinese-first README, original Desktop logo and cover, real application screenshots, and pointer-reactive product-site design.
