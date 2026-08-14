@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:23 CST
+
+- Change: Made pnpm child-process execution portable by resolving `pnpm.cmd` on Windows, added command-shim coverage, and advanced the release version to `0.1.2` without rewriting the failed `desktop-v0.1.1` tag.
+- Files: `scripts/process.ts`, `tests/scripts/process.spec.ts`, `package.json`, `site/index.html`, `site/assets/desktop-preview.svg`.
+- Decision: Root cause category — technical blind spot. `child_process.spawn` does not resolve the pnpm command shim on Windows without a shell, so both native Windows runners failed before upstream build despite PowerShell finding pnpm. Prevention: keep `shell: false`, map only the required trusted shim, test platform command resolution directly, and issue a new patch tag instead of rewriting published Git history.
+
 ## 2026-08-14 16:11 CST
 
 - Change: Reordered clean-run verification so the Desktop bundle and immutable runtime stage exist before the assembled-runtime snapshot in Verify, Release, and scheduled upstream update paths.

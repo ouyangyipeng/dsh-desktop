@@ -8,6 +8,16 @@ export interface RunOptions {
 }
 
 /**
+ * Resolve command shims that Node does not discover without a Windows shell.
+ * @param command Requested executable name or path.
+ * @param platform Current operating system.
+ * @returns Executable accepted by `child_process.spawn` without `shell: true`.
+ */
+export function resolveCommandExecutable(command: string, platform: NodeJS.Platform): string {
+  return platform === 'win32' && command === 'pnpm' ? 'pnpm.cmd' : command
+}
+
+/**
  * Execute one command and reject with its exact failed role.
  * @param command Executable name or path.
  * @param args Explicit argument vector.
@@ -18,7 +28,8 @@ export async function run(command: string, args: readonly string[], options: Run
   return await new Promise<string>((resolve, reject) => {
     let stdout = ''
     let stderr = ''
-    const child = spawn(command, [...args], {
+    const executable = resolveCommandExecutable(command, process.platform)
+    const child = spawn(executable, [...args], {
       cwd: options.cwd,
       env: inheritedEnvironment(options.env),
       stdio: options.capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',

@@ -1,6 +1,6 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { checkSite } from '../../scripts/check-site.ts'
 
@@ -13,6 +13,14 @@ afterEach(async () => {
 describe('product site', () => {
   it('contains the approved downloads, identity, community, and motion fallback', async () => {
     await expect(checkSite()).resolves.toEqual([])
+  })
+
+  it('shows the package release version', async () => {
+    const root = resolve(import.meta.dirname, '../..')
+    const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as { readonly version: string }
+    const html = await readFile(join(root, 'site/index.html'), 'utf8')
+    expect(html).toContain(`v${manifest.version}`)
+    expect(html).toContain(`<strong>${manifest.version}</strong>`)
   })
 
   it('rejects a local reference that escapes the published directory', async () => {
