@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 18:24 CST
+
+- Change: Approved the pinned Marketplace bundle, three-commit build identity, Chinese-first README, original Desktop logo and cover, real application screenshots, and pointer-reactive product-site design.
+- Files: `docs/superpowers/specs/2026-08-14-marketplace-bundle-branding-design.md`.
+- Decision: Keep Marketplace as a separately released Git submodule and mount it through a Desktop-owned read-only overlay so the packaged default does not modify the official Harness source or the user's profile manifest.
+
 ## 2026-08-14 17:20 CST
 
 - Change: Consolidated build and test configuration under `config/`, removed the redundant root `plan/` summary, corrected the remaining ambiguous packaging command documentation, and removed ignored local build and browser artifacts.
