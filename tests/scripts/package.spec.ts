@@ -48,6 +48,7 @@ describe('electron-builder configuration', () => {
     expect(config.files).toEqual(['lib/**', 'node_modules/**', 'package.json', '!**/*.map'])
     expect(config.extraResources).toEqual([
       { from: 'build-metadata.json', to: 'build-metadata.json' },
+      { from: 'dsh-desktop.patch.yml', to: 'runtime/dsh-desktop.patch.yml' },
       { from: 'node_modules', to: 'runtime/node_modules' },
     ])
   })
