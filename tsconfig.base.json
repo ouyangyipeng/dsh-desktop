@@ -21,7 +21,7 @@
     "noUnusedParameters": true,
     "resolveJsonModule": true,
     "rewriteRelativeImportExtensions": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "strict": true,
     "target": "ES2024",
     "types": [

@@ -8,6 +8,8 @@ export interface DesktopBuildMetadata {
   desktopCommit: string
   /** Official DeepSeek Harness commit incorporated by the desktop source. */
   upstreamCommit: string
+  /** Official source repository represented by the upstream commit. */
+  upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git'
   /** UTC build timestamp. */
   builtAt: string
   /** Operating system targeted by the build. */
@@ -47,8 +49,10 @@ export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata 
   const version = requiredString(value, 'version')
   const desktopCommit = commit(value, 'desktopCommit')
   const upstreamCommit = commit(value, 'upstreamCommit')
-  if ((desktopCommit === 'development') !== (upstreamCommit === 'development')) {
-    throw new Error('desktop build metadata commit identities must both be release SHAs or development')
+  if (upstreamCommit === 'development') throw new Error('desktop build metadata upstreamCommit must be a full Git SHA')
+  const upstreamRepository = requiredString(value, 'upstreamRepository')
+  if (upstreamRepository !== 'https://github.com/deepseek-ai/deepseek-harness.git') {
+    throw new Error('desktop build metadata upstreamRepository must be the official repository')
   }
   const builtAt = isoTimestamp(value)
   const platform = nodePlatform(value)
@@ -70,6 +74,7 @@ export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata 
     version,
     desktopCommit,
     upstreamCommit,
+    upstreamRepository,
     builtAt,
     platform,
     arch,
@@ -87,7 +92,8 @@ export function developmentBuildMetadata(version: string): DesktopBuildMetadata 
     schemaVersion: 1,
     version,
     desktopCommit: 'development',
-    upstreamCommit: 'development',
+    upstreamCommit: '0'.repeat(40),
+    upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
     builtAt: new Date().toISOString(),
     platform: process.platform,
     arch: process.arch,

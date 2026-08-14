@@ -1,0 +1,35 @@
+appId: io.github.ouyangyipeng.dsh-desktop
+productName: DS-Harness Desktop
+electronVersion: 43.4.0
+asar: true
+asarUnpack:
+  - '**/*.node'
+  - '**/node-pty/**/spawn-helper'
+npmRebuild: true
+nativeRebuilder: sequential
+files:
+  - lib/**
+  - node_modules/**
+  - package.json
+  - '!**/*.map'
+extraResources:
+  - from: build-metadata.json
+    to: build-metadata.json
+  - from: node_modules
+    to: runtime/node_modules
+directories:
+  output: ../artifacts
+mac:
+  target:
+    - dmg
+  identity: null
+  hardenedRuntime: false
+  notarize: false
+  artifactName: 'DS-Harness-Desktop-${version}-macos-${arch}.${ext}'
+win:
+  target:
+    - nsis
+  artifactName: 'DS-Harness-Desktop-${version}-windows-${arch}.${ext}'
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

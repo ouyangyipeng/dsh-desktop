@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 15:34 CST
+
+- Change: Added submodule identity checks, CI-safe upstream bootstrap, Git-derived build metadata, production-closure materialization, native packaging configuration, packaged smoke support, and real Web runtime snapshot coverage.
+- Files: `scripts/`, `electron-builder.yml`, `src/main/build-metadata.ts`, `tests/scripts/`, `tests/main/desktop-runtime.snapshot.ts`, `tsconfig.scripts.json`, `package.json`.
+- Decision: Deploy the official `@deepseek-ai/dsh` workspace from the pinned submodule, materialize every dependency link, and stage the CLI below `runtime/node_modules`; run the upstream install with `CI=true` because the official postinstall explicitly skips developer Git-hook configuration in CI and the submodule must not mutate the parent Git configuration.
+
 ## 2026-08-14 15:22 CST
 
 - Change: Migrated the Electron supervisor into the independent source tree, replaced its upstream workspace import with a local bounded UTF-8 tail, and added target-specific process-tree termination requests.

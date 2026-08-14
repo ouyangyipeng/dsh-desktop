@@ -12,6 +12,7 @@ function metadata(overrides: Partial<DesktopBuildMetadata> = {}): DesktopBuildMe
     version: '1.9.9',
     desktopCommit: 'a'.repeat(40),
     upstreamCommit: 'b'.repeat(40),
+    upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
     builtAt: '2026-08-13T15:00:00.000Z',
     platform: 'darwin',
     arch: 'arm64',

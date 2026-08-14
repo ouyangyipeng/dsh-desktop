@@ -12,6 +12,7 @@ const validMetadata = {
   version: '0.1.1',
   desktopCommit: 'a'.repeat(40),
   upstreamCommit: 'b'.repeat(40),
+  upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
   builtAt: '2026-08-13T15:00:00.000Z',
   platform: 'darwin',
   arch: 'arm64',
@@ -30,7 +31,8 @@ describe('desktop build metadata', () => {
       schemaVersion: 1,
       version: '0.1.1',
       desktopCommit: 'development',
-      upstreamCommit: 'development',
+      upstreamCommit: '0'.repeat(40),
+      upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
       platform: process.platform,
       arch: process.arch,
     })
@@ -43,7 +45,8 @@ describe('desktop build metadata', () => {
       schemaVersion: 1,
       version: '0.1.1',
       desktopCommit: 'development',
-      upstreamCommit: 'development',
+      upstreamCommit: 'b'.repeat(40),
+      upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
       builtAt: '2026-08-14T04:00:00.000Z',
       platform: 'darwin',
       arch: 'arm64',
@@ -52,18 +55,18 @@ describe('desktop build metadata', () => {
     expect(parseDesktopBuildMetadata(metadata)).toEqual(metadata)
   })
 
-  it('rejects mixed release and development commit identities', () => {
+  it('accepts a development desktop built from a real upstream revision', () => {
     expect(() => parseDesktopBuildMetadata({
       ...validMetadata,
       desktopCommit: 'development',
-    })).toThrow('must both be release SHAs or development')
+      releaseRepository: undefined,
+    })).not.toThrow()
   })
 
   it('rejects a release repository on development metadata', () => {
     expect(() => parseDesktopBuildMetadata({
       ...validMetadata,
       desktopCommit: 'development',
-      upstreamCommit: 'development',
     })).toThrow('development metadata cannot declare a releaseRepository')
   })
 

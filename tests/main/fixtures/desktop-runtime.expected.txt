@@ -1,0 +1,6 @@
+surface=DS-Harness Desktop
+profile=web
+host=127.0.0.1
+port=operating-system-selected
+frontend=ready
+shutdown=clean

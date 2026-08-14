@@ -20,7 +20,7 @@
     "smoke:packaged": "tsx scripts/smoke-packaged.ts",
     "site:check": "tsx scripts/check-site.ts",
     "test": "vitest run",
-    "typecheck": "tsc -b --pretty false",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.scripts.json --pretty false",
     "upstream:bootstrap": "tsx scripts/upstream.ts bootstrap",
     "upstream:status": "tsx scripts/upstream.ts status",
     "upstream:update": "tsx scripts/upstream.ts update"
