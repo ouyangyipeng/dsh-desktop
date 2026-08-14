@@ -12,15 +12,15 @@
     "node": "^22.19.0 || >=24.0.0"
   },
   "scripts": {
-    "build": "tsc -b && tsdown",
+    "build": "tsc -b && tsdown --config config/tsdown.config.ts",
     "check": "pnpm run typecheck && pnpm run test && pnpm run site:check",
     "dev": "pnpm run build && electron .",
     "pack": "tsx scripts/package.ts",
     "runtime:stage": "tsx scripts/stage.ts",
     "smoke:packaged": "tsx scripts/smoke-packaged.ts",
     "site:check": "tsx scripts/check-site.ts",
-    "test": "vitest run",
-    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.scripts.json --pretty false",
+    "test": "vitest run --config config/vitest.config.ts",
+    "typecheck": "tsc -b --pretty false && tsc -p config/tsconfig.scripts.json --pretty false",
     "upstream:bootstrap": "tsx scripts/upstream.ts bootstrap",
     "upstream:status": "tsx scripts/upstream.ts status",
     "upstream:update": "tsx scripts/upstream.ts update"

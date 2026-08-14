@@ -20,7 +20,7 @@ pnpm site:check
 pnpm upstream:status
 pnpm upstream:bootstrap
 pnpm runtime:stage -- --development
-pnpm pack -- --development --mac --arm64
+pnpm run pack -- --development --mac --arm64
 ```
 
 Run the narrow checks that prove the changed behavior. Installer claims require a target-native packaged smoke; Windows ARM64 evidence does not prove Windows x64 behavior.

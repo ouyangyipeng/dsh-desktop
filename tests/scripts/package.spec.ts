@@ -28,7 +28,7 @@ describe('desktop package request', () => {
 
 describe('electron-builder configuration', () => {
   it('packages only the staged application and immutable runtime', async () => {
-    const config = load(await readFile(resolve(import.meta.dirname, '../../electron-builder.yml'), 'utf8')) as Record<string, unknown>
+    const config = load(await readFile(resolve(import.meta.dirname, '../../config/electron-builder.yml'), 'utf8')) as Record<string, unknown>
 
     expect(config).toMatchObject({
       appId: 'io.github.ouyangyipeng.dsh-desktop',

@@ -7,9 +7,9 @@ import { stageDesktop } from './stage.ts'
 
 const STAGING_ROOT = resolve(REPOSITORY_ROOT, 'dist/stage')
 const ARTIFACTS_ROOT = resolve(REPOSITORY_ROOT, 'dist/artifacts')
-const BUILDER_CONFIG = resolve(REPOSITORY_ROOT, 'electron-builder.yml')
+const BUILDER_CONFIG = resolve(REPOSITORY_ROOT, 'config/electron-builder.yml')
 const BUILDER_CLI = resolve(REPOSITORY_ROOT, 'node_modules/electron-builder/out/cli/cli.js')
-const USAGE = 'Usage: pnpm pack -- [--development] (--mac|--windows) (--arm64|--x64)'
+const USAGE = 'Usage: pnpm run pack -- [--development] (--mac|--windows) (--arm64|--x64)'
 
 /** Supported native installer operating systems. */
 export type DesktopPackagePlatform = 'mac' | 'windows'

@@ -5,9 +5,9 @@
     "noEmit": true
   },
   "include": [
-    "scripts",
-    "tests",
-    "tsdown.config.ts",
-    "vitest.config.ts"
+    "../scripts",
+    "../tests",
+    "./tsdown.config.ts",
+    "./vitest.config.ts"
   ]
 }

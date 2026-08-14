@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 17:20 CST
+
+- Change: Consolidated build and test configuration under `config/`, removed the redundant root `plan/` summary, corrected the remaining ambiguous packaging command documentation, and removed ignored local build and browser artifacts.
+- Files: `config/`, `tsconfig.json`, `package.json`, `scripts/package.ts`, `tests/scripts/package.spec.ts`, `AGENTS.md`, `plan/00-v1-standalone-desktop-implementation.md`.
+- Decision: Keep only repository entrypoints, package-manager manifests, public top-level documents, and the TypeScript solution file at the root. Tool-specific configuration belongs under one discoverable directory and is selected explicitly by package scripts; the full standalone plan remains under `docs/superpowers/`.
+
 ## 2026-08-14 17:15 CST
 
 - Change: Changed Windows runtime shutdown to issue one immediate, PID-scoped `taskkill /T /F` request, documented its platform semantics, covered both supervisor termination attempts, and advanced the release version to `0.1.5`.
