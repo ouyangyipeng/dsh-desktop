@@ -7,14 +7,30 @@ export interface RunOptions {
   readonly capture?: boolean
 }
 
+/** One executable and its argument vector after platform adaptation. */
+export interface CommandInvocation {
+  readonly executable: string
+  readonly args: readonly string[]
+}
+
 /**
- * Resolve command shims that Node does not discover without a Windows shell.
+ * Resolve command shims that Node cannot execute directly on Windows.
  * @param command Requested executable name or path.
+ * @param args Explicit argument vector.
  * @param platform Current operating system.
- * @returns Executable accepted by `child_process.spawn` without `shell: true`.
+ * @param commandShell Windows command interpreter path.
+ * @returns Executable and arguments accepted by `child_process.spawn`.
  */
-export function resolveCommandExecutable(command: string, platform: NodeJS.Platform): string {
-  return platform === 'win32' && command === 'pnpm' ? 'pnpm.cmd' : command
+export function resolveCommandInvocation(
+  command: string,
+  args: readonly string[],
+  platform: NodeJS.Platform,
+  commandShell = 'cmd.exe',
+): CommandInvocation {
+  if (platform === 'win32' && command === 'pnpm') {
+    return { executable: commandShell, args: ['/d', '/s', '/c', 'pnpm.cmd', ...args] }
+  }
+  return { executable: command, args }
 }
 
 /**
@@ -28,8 +44,8 @@ export async function run(command: string, args: readonly string[], options: Run
   return await new Promise<string>((resolve, reject) => {
     let stdout = ''
     let stderr = ''
-    const executable = resolveCommandExecutable(command, process.platform)
-    const child = spawn(executable, [...args], {
+    const invocation = resolveCommandInvocation(command, args, process.platform, process.env.ComSpec)
+    const child = spawn(invocation.executable, [...invocation.args], {
       cwd: options.cwd,
       env: inheritedEnvironment(options.env),
       stdio: options.capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',

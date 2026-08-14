@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:39 CST
+
+- Change: Routed pnpm's Windows command shim through the explicit command interpreter recommended by Node.js, covered the complete executable and argument vector, and advanced the release version to `0.1.3` without rewriting `desktop-v0.1.2`.
+- Files: `scripts/process.ts`, `tests/scripts/process.spec.ts`, `package.json`, `site/index.html`, `site/assets/desktop-preview.svg`.
+- Decision: Root cause category — technical blind spot. Resolving `pnpm` to `pnpm.cmd` fixed command discovery but still treated a command script as a native executable, which Node 24 rejects with `spawn EINVAL`. Prevention: test Windows invocation semantics rather than only executable naming, run trusted pnpm arguments through an explicit `cmd.exe /d /s /c` vector, and preserve each failed release tag as immutable evidence.
+
 ## 2026-08-14 16:23 CST
 
 - Change: Made pnpm child-process execution portable by resolving `pnpm.cmd` on Windows, added command-shim coverage, and advanced the release version to `0.1.2` without rewriting the failed `desktop-v0.1.1` tag.
