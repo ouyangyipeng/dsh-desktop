@@ -57,13 +57,13 @@ This command fetches `origin/master` in the official submodule, checks out that 
 Builds are target-native and architecture-exact. On an Apple Silicon Mac:
 
 ```bash
-pnpm pack -- --development --mac --arm64
+pnpm run pack -- --development --mac --arm64
 ```
 
 On a matching Windows host:
 
 ```powershell
-pnpm pack -- --development --windows --arm64
+pnpm run pack -- --development --windows --arm64
 ```
 
 Use `--x64` only on an x64 host. Artifacts are written below `dist/artifacts`. Development metadata records the Desktop commit as `development`, but still records the real official Harness commit.
@@ -77,7 +77,7 @@ pnpm smoke:packaged -- "dist/artifacts/win-unpacked/DS-Harness Desktop.exe"
 For a release stage, omit `--development` and provide the public release repository:
 
 ```bash
-DSH_DESKTOP_RELEASE_REPOSITORY=ouyangyipeng/dsh-desktop pnpm pack -- --mac --arm64
+DSH_DESKTOP_RELEASE_REPOSITORY=ouyangyipeng/dsh-desktop pnpm run pack -- --mac --arm64
 ```
 
 The staging command rejects environment variables that attempt to override Git-derived Desktop or upstream commits.

@@ -79,7 +79,7 @@ pnpm build
 pnpm test
 pnpm site:check
 pnpm runtime:stage -- --development
-pnpm pack -- --development --mac --arm64
+pnpm run pack -- --development --mac --arm64
 ```
 
 安装包必须在目标平台原生构建：macOS 产物在 macOS 上构建，Windows 产物在 Windows 上构建。修改 staging 或 release 行为前，请阅读[开发说明](docs/development.md)、[架构说明](docs/architecture.md)和[发布说明](docs/releasing.md)。

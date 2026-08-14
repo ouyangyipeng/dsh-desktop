@@ -503,7 +503,7 @@ node dist/stage/node_modules/@deepseek-ai/dsh/lib/bin.js --help
 - [ ] **Step 2: Package the native development DMG**
 
 ```bash
-pnpm pack -- --development --mac --arm64
+pnpm run pack -- --development --mac --arm64
 ```
 
 Expected: one DMG named with version, platform, and architecture.

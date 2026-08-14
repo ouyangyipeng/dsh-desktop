@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:02 CST
+
+- Change: Corrected every packaging invocation from ambiguous `pnpm pack` to explicit `pnpm run pack`, and added regression checks across release automation and user documentation.
+- Files: `.github/workflows/release.yml`, `README.md`, `README.zh.md`, `docs/development.md`, `docs/superpowers/plans/2026-08-14-dsh-desktop-standalone-implementation.md`, `tests/workflows/workflows.spec.ts`.
+- Decision: Root cause category — rule violation. The project script name collides with pnpm's built-in tarball command, and the initial manual package invocation followed the ambiguous documentation without verifying artifact type. Prevention: require `pnpm run` for colliding script names, reject `pnpm pack` in executable release surfaces, and inspect the produced extension before treating a packaging command as successful.
+
 ## 2026-08-14 16:00 CST
 
 - Change: Added source verification, static Pages deployment, scheduled upstream pull-request creation, and target-native three-platform release automation; extended packaged smoke coverage to Windows executables.

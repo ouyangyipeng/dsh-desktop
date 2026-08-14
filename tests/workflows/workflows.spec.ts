@@ -57,11 +57,29 @@ describe('GitHub Actions workflows', () => {
     expect(source).toContain('runner: windows-11-arm')
     expect(source).toContain('arch: arm64')
     expect(source).toContain('pnpm smoke:packaged')
+    expect(source).toContain('pnpm run pack -- --mac --arm64')
+    expect(source).toContain('pnpm run pack -- --windows --${{ matrix.arch }}')
+    expect(source).not.toMatch(/\bpnpm pack\b/u)
     expect(source).toContain('DSH_DESKTOP_RELEASE_REPOSITORY: ${{ github.repository }}')
     expect(source).toContain('actions/upload-artifact@v7')
     expect(source).toContain('actions/download-artifact@v8')
     expect(source).toContain('SHA256SUMS')
     expect(source).toContain('gh release create')
+  })
+})
+
+describe('packaging command documentation', () => {
+  it('never collides with pnpm built-in pack', async () => {
+    for (const name of [
+      'README.md',
+      'README.zh.md',
+      'docs/development.md',
+      'docs/superpowers/plans/2026-08-14-dsh-desktop-standalone-implementation.md',
+    ]) {
+      const source = await readFile(resolve(ROOT, name), 'utf8')
+      expect(source).not.toMatch(/\bpnpm pack\b/u)
+      expect(source).toContain('pnpm run pack')
+    }
   })
 })
 

@@ -79,7 +79,7 @@ pnpm build
 pnpm test
 pnpm site:check
 pnpm runtime:stage -- --development
-pnpm pack -- --development --mac --arm64
+pnpm run pack -- --development --mac --arm64
 ```
 
 Packaging is target-native: macOS installers are built on macOS, and Windows installers are built on Windows. See [Development](docs/development.md), [Architecture](docs/architecture.md), and [Releasing](docs/releasing.md) before changing staging or release behavior.

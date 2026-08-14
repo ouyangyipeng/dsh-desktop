@@ -71,7 +71,7 @@ jobs:
         if: matrix.platform == 'mac'
         env:
           DSH_DESKTOP_RELEASE_REPOSITORY: ${{ github.repository }}
-        run: pnpm pack -- --mac --arm64
+        run: pnpm run pack -- --mac --arm64
 
       - name: Smoke mounted macOS application
         if: matrix.platform == 'mac'
@@ -90,7 +90,7 @@ jobs:
         if: matrix.platform == 'windows'
         env:
           DSH_DESKTOP_RELEASE_REPOSITORY: ${{ github.repository }}
-        run: pnpm pack -- --windows --${{ matrix.arch }}
+        run: pnpm run pack -- --windows --${{ matrix.arch }}
 
       - name: Smoke unpacked Windows application
         if: matrix.platform == 'windows'
