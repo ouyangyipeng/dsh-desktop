@@ -64,6 +64,12 @@ jobs:
       - name: Build official Harness runtime
         run: pnpm upstream:bootstrap
 
+      - name: Build Desktop bundle
+        run: pnpm build
+
+      - name: Assemble runtime snapshot input
+        run: pnpm runtime:stage -- --development
+
       - name: Verify target checkout
         run: pnpm test
 

@@ -48,8 +48,8 @@ export async function manageUpstream(action: UpstreamAction): Promise<void> {
   const updated = await requireCleanUpstream()
   await installAndBuildUpstream()
   await run('pnpm', ['build'], { cwd: REPOSITORY_ROOT })
-  await run('pnpm', ['test'], { cwd: REPOSITORY_ROOT })
   await stageDesktop(['--development'])
+  await run('pnpm', ['test'], { cwd: REPOSITORY_ROOT })
   console.log(`dsh-desktop upstream updated: ${current.commit} -> ${updated.commit}`)
 }
 

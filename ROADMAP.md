@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:11 CST
+
+- Change: Reordered clean-run verification so the Desktop bundle and immutable runtime stage exist before the assembled-runtime snapshot in Verify, Release, and scheduled upstream update paths.
+- Files: `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `scripts/upstream.ts`, `tests/workflows/workflows.spec.ts`, `tests/scripts/upstream.spec.ts`.
+- Decision: Root cause category — technical blind spot. Local validation reused an ignored `dist/stage`, while a fresh GitHub runner correctly proved that `pnpm test` includes an artifact-plane snapshot. Prevention: encode build → stage → snapshot ordering in tests and treat clean-run CI as authoritative for source/artifact sequencing.
+
 ## 2026-08-14 16:02 CST
 
 - Change: Corrected every packaging invocation from ambiguous `pnpm pack` to explicit `pnpm run pack`, and added regression checks across release automation and user documentation.

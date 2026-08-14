@@ -40,14 +40,14 @@ jobs:
       - name: Build official Harness runtime
         run: pnpm upstream:bootstrap
 
-      - name: Verify source, runtime snapshot, and site
-        run: pnpm check
-
       - name: Build Desktop bundle
         run: pnpm build
 
       - name: Assemble immutable development stage
         run: pnpm runtime:stage -- --development
+
+      - name: Verify source, assembled runtime snapshot, and site
+        run: pnpm check
 
       - name: Check patch hygiene
         run: git diff --check

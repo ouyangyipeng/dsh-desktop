@@ -17,6 +17,16 @@ async function workflow(name: string): Promise<{ readonly source: string; readon
   return { source, value: load(source) as Workflow }
 }
 
+function expectOrder(source: string, snippets: readonly string[]): void {
+  let previous = -1
+  for (const snippet of snippets) {
+    const current = source.indexOf(snippet)
+    expect(current, `workflow is missing ${snippet}`).toBeGreaterThan(-1)
+    expect(current, `${snippet} must follow ${snippets[snippets.indexOf(snippet) - 1] ?? 'workflow start'}`).toBeGreaterThan(previous)
+    previous = current
+  }
+}
+
 describe('GitHub Actions workflows', () => {
   it('verifies the independent project with the official submodule', async () => {
     const { source, value } = await workflow('verify')
@@ -25,6 +35,7 @@ describe('GitHub Actions workflows', () => {
     expect(source).toContain('pnpm upstream:bootstrap')
     expect(source).toContain('pnpm check')
     expect(source).toContain('pnpm runtime:stage -- --development')
+    expectOrder(source, ['pnpm upstream:bootstrap', 'pnpm build', 'pnpm runtime:stage -- --development', 'pnpm check'])
     expect(source).not.toContain('pull_request_target')
   })
 
@@ -65,6 +76,7 @@ describe('GitHub Actions workflows', () => {
     expect(source).toContain('actions/download-artifact@v8')
     expect(source).toContain('SHA256SUMS')
     expect(source).toContain('gh release create')
+    expectOrder(source, ['pnpm upstream:bootstrap', 'pnpm build', 'pnpm runtime:stage -- --development', 'pnpm test', 'pnpm run pack'])
   })
 })
 
