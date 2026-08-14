@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 15:22 CST
+
+- Change: Migrated the Electron supervisor into the independent source tree, replaced its upstream workspace import with a local bounded UTF-8 tail, and added target-specific process-tree termination requests.
+- Files: `src/main/`, `tests/main/`, `tsconfig.json`, `tsconfig.base.json`, `tsdown.config.ts`.
+- Decision: Keep the existing tested lifecycle interfaces while making the root build independent from all upstream TypeScript packages; packaged POSIX and Windows shutdown targets the owned tree rather than one carrier process.
+
 ## 2026-08-14 15:18 CST
 
 - Change: Started implementation on `feat/standalone-desktop`, recorded the official Harness gitlink, and added the root toolchain, repository policy, license, notices, and stage plan.
