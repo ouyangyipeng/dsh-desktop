@@ -1,5 +1,11 @@
 # Roadmap
 
+## 2026-08-14 16:00 CST
+
+- Change: Added source verification, static Pages deployment, scheduled upstream pull-request creation, and target-native three-platform release automation; extended packaged smoke coverage to Windows executables.
+- Files: `.github/workflows/`, `scripts/smoke-packaged.ts`, `tests/workflows/`, `tests/scripts/smoke-packaged.spec.ts`, `docs/development.md`.
+- Decision: Use GitHub's native macOS ARM64, Windows x64, and public-preview Windows ARM64 runners; block publication until each packaged application reaches a real Harness runtime and stops cleanly, then publish one checksum manifest.
+
 ## 2026-08-14 15:50 CST
 
 - Change: Added the bilingual product README, architecture, development and release documentation, plus a self-contained Midnight Particle GitHub Pages site with responsive and reduced-motion behavior.

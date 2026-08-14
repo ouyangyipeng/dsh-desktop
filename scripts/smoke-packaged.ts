@@ -6,14 +6,30 @@ import { basename, join, resolve } from 'node:path'
 
 const TIMEOUT_MS = 60_000
 const MAX_OUTPUT_CODE_UNITS = 16_384
-const USAGE = 'Usage: pnpm smoke:packaged -- "/Volumes/.../DS-Harness Desktop.app"'
+const USAGE = 'Usage: pnpm smoke:packaged -- <mounted macOS .app or unpacked Windows .exe>'
 
-/** Launch one mounted macOS application until its internal smoke lifecycle exits. */
+/**
+ * Resolve the executable used by one target-native packaged smoke.
+ * @param argv Package path, optionally prefixed by pnpm's separator.
+ * @param platform Current target operating system.
+ * @returns Absolute packaged executable path.
+ */
+export function resolvePackagedExecutable(argv: readonly string[], platform: NodeJS.Platform): string {
+  const args = argv[0] === '--' ? argv.slice(1) : argv
+  if (args.length !== 1) throw new Error(USAGE)
+  const target = args[0] as string
+  if (platform === 'darwin' && target.endsWith('.app')) {
+    return join(resolve(target), 'Contents', 'MacOS', 'DS-Harness Desktop')
+  }
+  if (platform === 'win32' && target.toLowerCase().endsWith('.exe')) return resolve(target)
+  throw new Error(USAGE)
+}
+
+/** Launch one target-native packaged application until its internal smoke lifecycle exits. */
 export async function smokePackagedDesktop(argv: readonly string[] = process.argv.slice(2)): Promise<void> {
   const args = argv[0] === '--' ? argv.slice(1) : argv
-  if (process.platform !== 'darwin' || args.length !== 1 || !args[0]?.endsWith('.app')) throw new Error(USAGE)
-  const appPath = resolve(args[0])
-  const executable = join(appPath, 'Contents', 'MacOS', 'DS-Harness Desktop')
+  const target = args[0] === undefined ? 'packaged application' : resolve(args[0])
+  const executable = resolvePackagedExecutable(argv, process.platform)
   if (!existsSync(executable)) throw new Error(`packaged desktop executable is missing: ${executable}`)
 
   const temporaryHome = await mkdtemp(join(tmpdir(), 'dsh-desktop-packaged-smoke-'))
@@ -27,7 +43,7 @@ export async function smokePackagedDesktop(argv: readonly string[] = process.arg
     for (const event of ['runtime.ready', 'application.smoke.ready', 'runtime.stopped forced=false']) {
       if (!log.includes(event)) throw new Error(`packaged desktop log lacks ${event}:\n${log.slice(-MAX_OUTPUT_CODE_UNITS)}`)
     }
-    console.log(`dsh-desktop packaged smoke: ${basename(appPath)} reached runtime.ready and stopped cleanly`)
+    console.log(`dsh-desktop packaged smoke: ${basename(target)} reached runtime.ready and stopped cleanly`)
   } catch (error: unknown) {
     let log = ''
     try {

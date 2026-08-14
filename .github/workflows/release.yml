@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            platform: mac
+            arch: arm64
+            artifact: desktop-macos-arm64
+            installer: 'dist/artifacts/*.dmg'
+          - runner: windows-2025
+            platform: windows
+            arch: x64
+            artifact: desktop-windows-x64
+            installer: 'dist/artifacts/*.exe'
+          - runner: windows-11-arm
+            platform: windows
+            arch: arm64
+            artifact: desktop-windows-arm64
+            installer: 'dist/artifacts/*.exe'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout independent source and official Harness
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install pnpm from packageManager
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            upstream/deepseek-harness/pnpm-lock.yaml
+
+      - name: Match tag to Desktop version
+        shell: bash
+        run: node -e "const p=require('./package.json'); if(process.env.GITHUB_REF_NAME!=='desktop-v'+p.version) throw new Error('release tag does not match package version')"
+
+      - name: Install Desktop dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build official Harness runtime
+        run: pnpm upstream:bootstrap
+
+      - name: Verify target checkout
+        run: pnpm test
+
+      - name: Package macOS application
+        if: matrix.platform == 'mac'
+        env:
+          DSH_DESKTOP_RELEASE_REPOSITORY: ${{ github.repository }}
+        run: pnpm pack -- --mac --arm64
+
+      - name: Smoke mounted macOS application
+        if: matrix.platform == 'mac'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg=$(find dist/artifacts -maxdepth 1 -name '*.dmg' -print -quit)
+          test -n "$dmg"
+          mount_point=$(mktemp -d)
+          device=$(hdiutil attach -nobrowse -readonly -mountpoint "$mount_point" "$dmg" | awk '/^\/dev\// { print $1; exit }')
+          test -n "$device"
+          trap 'hdiutil detach "$device"' EXIT
+          pnpm smoke:packaged -- "$mount_point/DS-Harness Desktop.app"
+
+      - name: Package Windows application
+        if: matrix.platform == 'windows'
+        env:
+          DSH_DESKTOP_RELEASE_REPOSITORY: ${{ github.repository }}
+        run: pnpm pack -- --windows --${{ matrix.arch }}
+
+      - name: Smoke unpacked Windows application
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $executable = Get-ChildItem -Path dist/artifacts -Filter 'DS-Harness Desktop.exe' -Recurse | Select-Object -First 1
+          if ($null -eq $executable) { throw 'Packaged Windows executable was not produced' }
+          pnpm smoke:packaged -- "$($executable.FullName)"
+
+      - name: Upload verified installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.installer }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download verified installers
+        uses: actions/download-artifact@v8
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Generate SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(find release-assets -maxdepth 1 -type f \( -name '*.dmg' -o -name '*.exe' \) | wc -l | tr -d ' ')
+          test "$count" = '3'
+          cd release-assets
+          find . -maxdepth 1 -type f \( -name '*.dmg' -o -name '*.exe' \) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --verify-tag \
+            --title "DS-Harness Desktop ${GITHUB_REF_NAME#desktop-v}" \
+            --generate-notes \
+            --notes 'Unsigned community build. Verify SHA256SUMS and follow the scoped operating-system approval steps in the README; do not disable platform security controls.'

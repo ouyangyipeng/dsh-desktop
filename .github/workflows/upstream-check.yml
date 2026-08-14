@@ -1,0 +1,85 @@
+name: Upstream check
+
+on:
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-check
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout independent source and official Harness
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install pnpm from packageManager
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            upstream/deepseek-harness/pnpm-lock.yaml
+
+      - name: Install Desktop dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Update and verify the official Harness gitlink
+        run: pnpm upstream:update
+
+      - name: Detect upstream change
+        id: change
+        shell: bash
+        run: |
+          if git diff --cached --quiet -- upstream/deepseek-harness; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          upstream_sha=$(git -C upstream/deepseek-harness rev-parse HEAD)
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+          echo "sha=$upstream_sha" >> "$GITHUB_OUTPUT"
+          echo "short=${upstream_sha:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Create reviewable update pull request
+        if: steps.change.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_SHA: ${{ steps.change.outputs.sha }}
+          UPSTREAM_SHORT: ${{ steps.change.outputs.short }}
+        shell: bash
+        run: |
+          title="[chore] Update Harness to $UPSTREAM_SHORT"
+          if [ "$(gh pr list --state open --search "$title in:title" --json number --jq 'length')" != '0' ]; then
+            echo "An open pull request already tracks $UPSTREAM_SHORT"
+            exit 0
+          fi
+          branch="feat/upstream-$UPSTREAM_SHORT-${GITHUB_RUN_ID}"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -m "$title" \
+            -m 'Root cause: NA' \
+            -m 'Solution: Advance the official Harness submodule after the full Desktop update verification completed.' \
+            -m 'Risks: Upstream behavior changes require maintainer review and target-native release validation.' \
+            -m 'Dependency: https://github.com/deepseek-ai/deepseek-harness' \
+            -m "Links: https://github.com/deepseek-ai/deepseek-harness/commit/$UPSTREAM_SHA"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "$title" \
+            --body "Updates the pinned official Harness revision to [\`$UPSTREAM_SHORT\`](https://github.com/deepseek-ai/deepseek-harness/commit/$UPSTREAM_SHA). The workflow completed upstream build, Desktop build, tests, and runtime staging. This pull request is intentionally not merged or released automatically."

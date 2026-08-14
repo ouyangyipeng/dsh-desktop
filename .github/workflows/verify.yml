@@ -1,0 +1,53 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout independent source and official Harness
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install pnpm from packageManager
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            upstream/deepseek-harness/pnpm-lock.yaml
+
+      - name: Install Desktop dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build official Harness runtime
+        run: pnpm upstream:bootstrap
+
+      - name: Verify source, runtime snapshot, and site
+        run: pnpm check
+
+      - name: Build Desktop bundle
+        run: pnpm build
+
+      - name: Assemble immutable development stage
+        run: pnpm runtime:stage -- --development
+
+      - name: Check patch hygiene
+        run: git diff --check

@@ -68,6 +68,12 @@ pnpm pack -- --development --windows --arm64
 
 Use `--x64` only on an x64 host. Artifacts are written below `dist/artifacts`. Development metadata records the Desktop commit as `development`, but still records the real official Harness commit.
 
+Smoke the unpacked application produced beside the Windows installer:
+
+```powershell
+pnpm smoke:packaged -- "dist/artifacts/win-unpacked/DS-Harness Desktop.exe"
+```
+
 For a release stage, omit `--development` and provide the public release repository:
 
 ```bash
