@@ -1,7 +1,7 @@
 /** Stable identity embedded in one desktop application build. */
 export interface DesktopBuildMetadata {
   /** Metadata format version. */
-  schemaVersion: 1
+  schemaVersion: 2
   /** Desktop application version. */
   version: string
   /** Commit containing the desktop source. */
@@ -10,6 +10,12 @@ export interface DesktopBuildMetadata {
   upstreamCommit: string
   /** Official source repository represented by the upstream commit. */
   upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git'
+  /** Marketplace commit incorporated by the desktop source. */
+  marketplaceCommit: string
+  /** Source repository represented by the Marketplace commit. */
+  marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git'
+  /** Marketplace package version staged into the application. */
+  marketplaceVersion: string
   /** UTC build timestamp. */
   builtAt: string
   /** Operating system targeted by the build. */
@@ -44,7 +50,7 @@ const ARCH_PATTERN = /^[A-Za-z0-9_-]+$/
  */
 export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata {
   if (!isRecord(value)) throw new Error('desktop build metadata must be an object')
-  if (value.schemaVersion !== 1) throw new Error('desktop build metadata schemaVersion must be 1')
+  if (value.schemaVersion !== 2) throw new Error('desktop build metadata schemaVersion must be 2')
 
   const version = requiredString(value, 'version')
   const desktopCommit = commit(value, 'desktopCommit')
@@ -53,6 +59,18 @@ export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata 
   const upstreamRepository = requiredString(value, 'upstreamRepository')
   if (upstreamRepository !== 'https://github.com/deepseek-ai/deepseek-harness.git') {
     throw new Error('desktop build metadata upstreamRepository must be the official repository')
+  }
+  const marketplaceCommit = commit(value, 'marketplaceCommit')
+  if (marketplaceCommit === 'development' && desktopCommit !== 'development') {
+    throw new Error('desktop release metadata marketplaceCommit must be a full Git SHA')
+  }
+  const marketplaceRepository = requiredString(value, 'marketplaceRepository')
+  if (marketplaceRepository !== 'https://github.com/ouyangyipeng/dsh-marketplace.git') {
+    throw new Error('desktop build metadata marketplaceRepository must be the bundled repository')
+  }
+  const marketplaceVersion = requiredString(value, 'marketplaceVersion')
+  if (marketplaceVersion === 'development' && marketplaceCommit !== 'development') {
+    throw new Error('desktop build metadata marketplaceVersion cannot be development for a pinned commit')
   }
   const builtAt = isoTimestamp(value)
   const platform = nodePlatform(value)
@@ -70,11 +88,14 @@ export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata 
   }
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     version,
     desktopCommit,
     upstreamCommit,
     upstreamRepository,
+    marketplaceCommit,
+    marketplaceRepository,
+    marketplaceVersion,
     builtAt,
     platform,
     arch,
@@ -89,11 +110,14 @@ export function parseDesktopBuildMetadata(value: unknown): DesktopBuildMetadata 
  */
 export function developmentBuildMetadata(version: string): DesktopBuildMetadata {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     version,
     desktopCommit: 'development',
     upstreamCommit: '0'.repeat(40),
     upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+    marketplaceCommit: 'development',
+    marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+    marketplaceVersion: 'development',
     builtAt: new Date().toISOString(),
     platform: process.platform,
     arch: process.arch,

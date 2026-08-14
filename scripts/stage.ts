@@ -10,7 +10,9 @@ import {
 import { run } from './process.ts'
 import {
   desktopCommit,
+  MARKETPLACE_REPOSITORY,
   REPOSITORY_ROOT,
+  requireCleanMarketplace,
   requireCleanUpstream,
   UPSTREAM_REPOSITORY,
   UPSTREAM_ROOT,
@@ -34,6 +36,8 @@ export interface DesktopStageIdentity {
 export interface DesktopGitIdentity {
   readonly desktopCommit: string
   readonly upstreamCommit: string
+  readonly marketplaceCommit: string
+  readonly marketplaceVersion: string
 }
 
 /**
@@ -53,16 +57,19 @@ export function resolveDesktopStageMetadata(
   const args = argv[0] === '--' ? argv.slice(1) : argv
   const development = args.length === 1 && args[0] === '--development'
   if (!development && args.length !== 0) throw new Error(USAGE)
-  for (const name of ['DSH_DESKTOP_COMMIT', 'DSH_DESKTOP_UPSTREAM_COMMIT']) {
+  for (const name of ['DSH_DESKTOP_COMMIT', 'DSH_DESKTOP_UPSTREAM_COMMIT', 'DSH_DESKTOP_MARKETPLACE_COMMIT']) {
     if (environment[name] !== undefined) throw new Error(`${name} must not override Git-derived build identity`)
   }
 
   const metadata: DesktopBuildMetadata = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     ...identity,
     desktopCommit: development ? 'development' : commits.desktopCommit,
     upstreamCommit: commits.upstreamCommit,
     upstreamRepository: UPSTREAM_REPOSITORY,
+    marketplaceCommit: commits.marketplaceCommit,
+    marketplaceRepository: MARKETPLACE_REPOSITORY,
+    marketplaceVersion: commits.marketplaceVersion,
     ...(development ? {} : { releaseRepository: requiredReleaseRepository(environment) }),
   }
   return parseDesktopBuildMetadata(metadata)
@@ -75,6 +82,7 @@ export async function stageDesktop(argv: readonly string[] = process.argv.slice(
     throw new Error('desktop package.json requires a non-empty version')
   }
   const upstream = await requireCleanUpstream()
+  const marketplace = await requireCleanMarketplace()
   const metadata = resolveDesktopStageMetadata(argv, process.env, {
     version: rootManifest.version,
     platform: process.platform,
@@ -83,6 +91,8 @@ export async function stageDesktop(argv: readonly string[] = process.argv.slice(
   }, {
     desktopCommit: await desktopCommit(),
     upstreamCommit: upstream.commit,
+    marketplaceCommit: marketplace.commit,
+    marketplaceVersion: marketplace.version,
   })
 
   requireFile(join(ROOT_BUILD, 'main.js'), 'run pnpm build before staging')
