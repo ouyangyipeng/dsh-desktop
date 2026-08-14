@@ -1,7 +1,7 @@
+import { isAbsolute } from 'node:path'
 import { OutputTail } from './output-tail.ts'
 import { parseRuntimeReadyLine } from './runtime-url.ts'
 
-const RUNTIME_ARGS = ['web', '--host', '127.0.0.1', '--port', '0'] as const
 const MAX_PENDING_LINE_CHARS = 4096
 const encoder = new TextEncoder()
 
@@ -71,6 +71,8 @@ export interface RuntimeDiagnostics {
 
 /** Construction values for one non-restartable runtime supervisor. */
 export interface RuntimeSupervisorOptions extends Omit<RuntimeChildInput, 'args'> {
+  /** Absolute immutable Desktop overlay mounted after the user profile. */
+  readonly patchPath: string
   /** Utility-process adapter. */
   readonly childFactory: RuntimeChildFactory
   /** HTTP readiness probe. */
@@ -112,6 +114,7 @@ export class RuntimeSupervisor {
 
   /** @param options Fully resolved launch, timeout, diagnostics, and callback values. */
   constructor(private readonly options: RuntimeSupervisorOptions) {
+    if (!isAbsolute(options.patchPath)) throw new Error('runtime Desktop overlay path must be absolute')
     assertPositiveInteger(options.startupTimeoutMs, 'startupTimeoutMs')
     assertPositiveInteger(options.stopTimeoutMs, 'stopTimeoutMs')
     this.stdoutTail = new OutputTail(options.diagnosticMaxBytes)
@@ -132,7 +135,7 @@ export class RuntimeSupervisor {
     try {
       const child = this.options.childFactory({
         entry: this.options.entry,
-        args: [...RUNTIME_ARGS],
+        args: ['web', '--patch', this.options.patchPath, '--host', '127.0.0.1', '--port', '0'],
         cwd: this.options.cwd,
         env: this.options.env,
       })

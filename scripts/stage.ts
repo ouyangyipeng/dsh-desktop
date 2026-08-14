@@ -11,6 +11,7 @@ import { run } from './process.ts'
 import {
   desktopCommit,
   MARKETPLACE_REPOSITORY,
+  MARKETPLACE_ROOT,
   REPOSITORY_ROOT,
   requireCleanMarketplace,
   requireCleanUpstream,
@@ -18,10 +19,12 @@ import {
   UPSTREAM_ROOT,
 } from './repository.ts'
 import { parseDesktopBuildMetadata, type DesktopBuildMetadata } from '../src/main/build-metadata.ts'
+import { copyMarketplacePackage } from './marketplace.ts'
 
 const STAGING_ROOT = resolve(REPOSITORY_ROOT, 'dist/stage')
 const DEPLOY_ROOT = resolve(REPOSITORY_ROOT, 'dist/runtime-deploy')
 const ROOT_BUILD = resolve(REPOSITORY_ROOT, 'lib')
+const DESKTOP_PATCH = resolve(REPOSITORY_ROOT, 'config/dsh-desktop.patch.yml')
 const USAGE = 'Usage: pnpm runtime:stage -- --development\n       or provide DSH_DESKTOP_RELEASE_REPOSITORY for a release build.'
 
 /** Stable host and package values used to construct staging metadata. */
@@ -109,6 +112,9 @@ export async function stageDesktop(argv: readonly string[] = process.argv.slice(
   requireFile(join(STAGING_ROOT, 'node_modules/@deepseek-ai/dsh/lib/bin.js'), 'DSH CLI is missing')
   requireFile(join(STAGING_ROOT, 'node_modules/@deepseek-ai/cordis-plugin-group/lib/index.js'), 'Cordis group plugin is missing')
   requireFile(join(STAGING_ROOT, 'node_modules/@deepseek-ai/dsh-web-frontend/dist/index.html'), 'Harness Web frontend is missing')
+  requireFile(join(STAGING_ROOT, 'node_modules/dsh-marketplace/lib/index.js'), 'Marketplace Host bundle is missing')
+  requireFile(join(STAGING_ROOT, 'node_modules/dsh-marketplace/lib/client.js'), 'Marketplace Client bundle is missing')
+  requireFile(join(STAGING_ROOT, 'dsh-desktop.patch.yml'), 'Desktop Marketplace overlay is missing')
   const remainingSymlink = await findFirstSymlink(STAGING_ROOT)
   if (remainingSymlink !== undefined) throw new Error(`desktop staging retains symbolic link ${remainingSymlink}`)
   console.log(`dsh-desktop stage: ${STAGING_ROOT}`)
@@ -150,7 +156,12 @@ async function assembleStage(rootManifest: PackageManifest, metadata: DesktopBui
     dereference: true,
     filter: path => path !== join(DEPLOY_ROOT, 'node_modules') && !path.startsWith(`${join(DEPLOY_ROOT, 'node_modules')}${sep}`),
   })
+  const stagedDshManifestPath = join(STAGING_ROOT, 'node_modules/@deepseek-ai/dsh/package.json')
+  const stagedDshManifest = await readManifest(stagedDshManifestPath)
+  await writeFile(stagedDshManifestPath, `${JSON.stringify(withMarketplaceDependency(stagedDshManifest, metadata.marketplaceVersion), null, 2)}\n`)
+  await copyMarketplacePackage(MARKETPLACE_ROOT, join(STAGING_ROOT, 'node_modules/dsh-marketplace'))
   await cp(ROOT_BUILD, join(STAGING_ROOT, 'lib'), { recursive: true, dereference: true })
+  await cp(DESKTOP_PATCH, join(STAGING_ROOT, 'dsh-desktop.patch.yml'), { dereference: false })
   const stageManifest = {
     name: rootManifest.name,
     productName: rootManifest.productName,
@@ -160,7 +171,7 @@ async function assembleStage(rootManifest: PackageManifest, metadata: DesktopBui
     type: 'module',
     main: 'lib/main.js',
     license: rootManifest.license,
-    dependencies: { '@deepseek-ai/dsh': deployedManifest.version },
+    dependencies: { '@deepseek-ai/dsh': deployedManifest.version, 'dsh-marketplace': metadata.marketplaceVersion },
   }
   await writeFile(join(STAGING_ROOT, 'package.json'), `${JSON.stringify(stageManifest, null, 2)}\n`)
   await writeFile(join(STAGING_ROOT, 'build-metadata.json'), `${JSON.stringify(metadata, null, 2)}\n`)
@@ -172,6 +183,20 @@ interface PackageManifest {
   readonly version?: unknown
   readonly description?: unknown
   readonly license?: unknown
+  readonly dependencies?: unknown
+}
+
+function withMarketplaceDependency(manifest: PackageManifest, version: string): PackageManifest {
+  if (manifest.dependencies !== undefined && (manifest.dependencies === null || typeof manifest.dependencies !== 'object' || Array.isArray(manifest.dependencies))) {
+    throw new Error('staged DSH package dependencies must be an object')
+  }
+  return {
+    ...manifest,
+    dependencies: {
+      ...(manifest.dependencies as Record<string, unknown> | undefined),
+      'dsh-marketplace': version,
+    },
+  }
 }
 
 async function readManifest(path: string): Promise<PackageManifest> {

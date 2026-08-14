@@ -1,5 +1,11 @@
 # Architecture
 
+## Bundled Marketplace
+
+Desktop pins `plugins/dsh-marketplace` as an independent Git submodule. Staging validates its URL, recorded commit, clean worktree, package name, semantic version, publish-file allowlist, and absence of symbolic links before copying only the prebuilt Host, Client, types, patch, license, and README files into `runtime/node_modules/dsh-marketplace`.
+
+The application starts DSH with the Desktop-owned `dsh-desktop.patch.yml` overlay. The overlay mounts one `dsh-marketplace` row and marks `ouyangyipeng/dsh-marketplace` as bundled, so the plugin cannot update or remove itself from the Desktop distribution. User-installed community plugins remain owned by the isolated Desktop DSH profile. Installed applications never run Git or pnpm to update either official Harness or Marketplace; both move only through a verified Desktop release.
+
 DS-Harness Desktop owns distribution and application lifecycle; the official DeepSeek Harness submodule owns agent and Web runtime behavior. This separation lets Desktop follow upstream by changing one reviewed gitlink instead of maintaining a product fork.
 
 ## Runtime sequence

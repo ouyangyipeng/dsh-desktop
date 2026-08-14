@@ -3,4 +3,6 @@ profile=web
 host=127.0.0.1
 port=operating-system-selected
 frontend=ready
+marketplace-host=bundled
+marketplace-client=ready
 shutdown=clean

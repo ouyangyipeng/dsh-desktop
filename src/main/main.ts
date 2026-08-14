@@ -65,6 +65,9 @@ const lifecycleReference: { current?: DesktopLifecycle } = {}
 
 const runtime = createElectronRuntimeSupervisor({
   desktopHarnessHome,
+  patchPath: app.isPackaged
+    ? join(process.resourcesPath, 'runtime', 'dsh-desktop.patch.yml')
+    : join(import.meta.dirname, '../config/dsh-desktop.patch.yml'),
   ...(app.isPackaged ? { runtimeNodeModules: join(process.resourcesPath, 'runtime', 'node_modules') } : {}),
   ...(app.isPackaged ? { runtimeChildFactory: embeddedNodeRuntimeChildFactory } : {}),
   logSink: (entry) => {
@@ -321,7 +324,7 @@ async function showAbout(): Promise<void> {
     type: 'info',
     title: 'About DS-Harness Desktop',
     message: `DS-Harness Desktop ${buildMetadata.version}`,
-    detail: `Desktop commit: ${buildMetadata.desktopCommit}\nUpstream repository: ${buildMetadata.upstreamRepository}\nUpstream commit: ${buildMetadata.upstreamCommit}\nTarget: ${buildMetadata.platform}/${buildMetadata.arch}`,
+    detail: `Desktop commit: ${buildMetadata.desktopCommit}\nUpstream repository: ${buildMetadata.upstreamRepository}\nUpstream commit: ${buildMetadata.upstreamCommit}\nMarketplace: ${buildMetadata.marketplaceVersion} (${buildMetadata.marketplaceCommit})\nMarketplace repository: ${buildMetadata.marketplaceRepository}\nTarget: ${buildMetadata.platform}/${buildMetadata.arch}`,
   })
 }
 

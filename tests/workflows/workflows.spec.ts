@@ -95,6 +95,22 @@ describe('packaging command documentation', () => {
   })
 })
 
+describe('bundled Marketplace packaging', () => {
+  it('ships one immutable Desktop overlay and both Marketplace runtime bundles', async () => {
+    const patchSource = await readFile(resolve(ROOT, 'config/dsh-desktop.patch.yml'), 'utf8')
+    const builder = await readFile(resolve(ROOT, 'config/electron-builder.yml'), 'utf8')
+    const stage = await readFile(resolve(ROOT, 'scripts/stage.ts'), 'utf8')
+
+    expect(patchSource.match(/id: dsh-marketplace/gu)).toHaveLength(1)
+    expect(patchSource).toContain('bundledRepositories:')
+    expect(patchSource).toContain('ouyangyipeng/dsh-marketplace')
+    expect(builder).toContain('to: runtime/dsh-desktop.patch.yml')
+    expect(stage).toContain("node_modules/dsh-marketplace/lib/index.js")
+    expect(stage).toContain("node_modules/dsh-marketplace/lib/client.js")
+    expect(stage).toContain("'dsh-marketplace': metadata.marketplaceVersion")
+  })
+})
+
 describe('workflow action versions', () => {
   it('uses maintained Node 24 action runtimes and pnpm from packageManager', async () => {
     for (const name of ['verify', 'pages', 'upstream-check', 'release']) {

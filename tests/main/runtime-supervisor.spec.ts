@@ -35,6 +35,7 @@ function supervisor(
     runtime: new RuntimeSupervisor({
       childFactory: factory,
       entry: '/app/node_modules/@deepseek-ai/dsh/lib/bin.js',
+      patchPath: '/app/runtime/dsh-desktop.patch.yml',
       cwd: '/data/harness',
       env: { PATH: '/bin', DSH_HOME: '/data/harness' },
       probe: async () => {},
@@ -77,11 +78,16 @@ describe('runtime supervisor', () => {
     } satisfies RuntimeStartResult)
     expect(inputs).toEqual([{
       entry: '/app/node_modules/@deepseek-ai/dsh/lib/bin.js',
-      args: ['web', '--host', '127.0.0.1', '--port', '0'],
+      args: ['web', '--patch', '/app/runtime/dsh-desktop.patch.yml', '--host', '127.0.0.1', '--port', '0'],
       cwd: '/data/harness',
       env: { PATH: '/bin', DSH_HOME: '/data/harness' },
     }])
     await expect(runtime.stop()).resolves.toEqual({ forced: false })
+  })
+
+  it('rejects a relative Desktop overlay path before spawning', () => {
+    const child = new FakeRuntimeChild()
+    expect(() => supervisor(child, { patchPath: 'config/dsh-desktop.patch.yml' })).toThrow('absolute')
   })
 
   it('rejects when the child exits before readiness', async () => {
