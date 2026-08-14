@@ -22,6 +22,7 @@ extraResources:
 directories:
   output: ../artifacts
 mac:
+  icon: desktop-logo.png
   target:
     - dmg
   identity: null
@@ -29,6 +30,7 @@ mac:
   notarize: false
   artifactName: 'DS-Harness-Desktop-${version}-macos-${arch}.${ext}'
 win:
+  icon: desktop-logo.png
   target:
     - nsis
   artifactName: 'DS-Harness-Desktop-${version}-windows-${arch}.${ext}'

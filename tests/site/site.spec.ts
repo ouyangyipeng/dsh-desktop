@@ -23,6 +23,15 @@ describe('product site', () => {
     expect(html).toContain(`<strong>${manifest.version}</strong>`)
   })
 
+  it('uses Chinese by default with English and real Marketplace media', async () => {
+    const root = resolve(import.meta.dirname, '../..')
+    const html = await readFile(join(root, 'site/index.html'), 'utf8')
+    expect(html).toContain('<html lang="zh-CN">')
+    expect(html).toContain('href="en/"')
+    expect(html).toContain('assets/desktop-marketplace.webp')
+    expect(html).toContain('dsh-marketplace v0.1.1')
+  })
+
   it('rejects a local reference that escapes the published directory', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-desktop-site-'))
     roots.push(root)

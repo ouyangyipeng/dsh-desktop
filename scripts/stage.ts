@@ -25,6 +25,7 @@ const STAGING_ROOT = resolve(REPOSITORY_ROOT, 'dist/stage')
 const DEPLOY_ROOT = resolve(REPOSITORY_ROOT, 'dist/runtime-deploy')
 const ROOT_BUILD = resolve(REPOSITORY_ROOT, 'lib')
 const DESKTOP_PATCH = resolve(REPOSITORY_ROOT, 'config/dsh-desktop.patch.yml')
+const DESKTOP_ICON = resolve(REPOSITORY_ROOT, 'assets/icons/desktop-logo.png')
 const USAGE = 'Usage: pnpm runtime:stage -- --development\n       or provide DSH_DESKTOP_RELEASE_REPOSITORY for a release build.'
 
 /** Stable host and package values used to construct staging metadata. */
@@ -162,6 +163,7 @@ async function assembleStage(rootManifest: PackageManifest, metadata: DesktopBui
   await copyMarketplacePackage(MARKETPLACE_ROOT, join(STAGING_ROOT, 'node_modules/dsh-marketplace'))
   await cp(ROOT_BUILD, join(STAGING_ROOT, 'lib'), { recursive: true, dereference: true })
   await cp(DESKTOP_PATCH, join(STAGING_ROOT, 'dsh-desktop.patch.yml'), { dereference: false })
+  await cp(DESKTOP_ICON, join(STAGING_ROOT, 'desktop-logo.png'), { dereference: false })
   const stageManifest = {
     name: rootManifest.name,
     productName: rootManifest.productName,

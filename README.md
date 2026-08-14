@@ -1,111 +1,62 @@
+<p align="center"><img src="assets/brand/desktop-cover.svg" alt="DS-Harness Desktop 封面" width="100%"></p>
+<p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a> · <a href="https://ouyangyipeng.github.io/dsh-desktop/">官网</a> · <a href="https://github.com/ouyangyipeng/dsh-desktop/releases/latest">下载</a> · <a href="https://github.com/ouyangyipeng/dsh-marketplace">插件市场</a></p>
+
 # DS-Harness Desktop
 
-**DS-Harness Desktop** (`dsh-desktop`) packages the official [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web experience as a native desktop application for macOS and Windows. It starts an isolated local Harness runtime, waits until that runtime is healthy, and opens the exact loopback origin in a hardened Electron window.
+**DS-Harness Desktop**（`dsh-desktop`）把官方 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web 体验封装成可直接安装的 macOS 与 Windows 应用。下载 DMG 或 EXE 后即可启动，不要求用户安装 Git、Node.js 或 pnpm。
 
-> This is an unofficial, community-maintained project. It is not an official DeepSeek release. DeepSeek Harness remains the upstream runtime and source of product behavior.
+> 这是非官方的社区维护项目，不是 DeepSeek 官方发布。Harness 的运行时、Web UI 和插件系统仍来自官方仓库。
 
-![DS-Harness Desktop preview](site/assets/desktop-preview.svg)
+![DS-Harness Desktop 中的真实 Marketplace 界面](assets/screenshots/desktop-marketplace.png)
 
-[Download the latest release](https://github.com/ouyangyipeng/dsh-desktop/releases/latest) · [Product site](https://ouyangyipeng.github.io/dsh-desktop/) · [中文说明](README.zh.md) · [dsh-plugin community](https://github.com/topics/dsh-plugin)
+## v0.2.0
 
-## Why this project exists
+- 双击应用即启动标准 `dsh web`，无需 clone、命令行或单独浏览器；
+- 默认离线内置 [dsh-marketplace v0.1.1](https://github.com/ouyangyipeng/dsh-marketplace/releases/tag/v0.1.1)，可在设置中搜索、检查、安装、更新和卸载 `topic:dsh-plugin` 社区插件；
+- Marketplace 完全跟随 DSH 亮色/深色 token，自身作为 Desktop 固定 bundle，不能在市场中误卸载；
+- 隔离 `DSH_HOME`、固定 loopback、启动健康检查、进程树回收、脱敏诊断和恢复页；
+- About 同时记录 Desktop、官方 Harness、Marketplace 三份 commit 与版本。
 
-The upstream Harness development flow is intentionally repository-oriented: clone the source, run commands, then open its browser UI. DS-Harness Desktop adds a small distribution and lifecycle layer around that official runtime:
-
-- one app icon instead of a terminal command and manually opened browser;
-- an embedded, version-pinned Harness runtime with no first-run clone;
-- a supervised `dsh web` process bound to `127.0.0.1` on an operating-system-selected port;
-- startup recovery with redacted diagnostics and log access;
-- separate checks for Desktop releases and newer official Harness revisions;
-- traceable build identity for both the Desktop commit and upstream Harness commit.
-
-It does not fork Harness behavior into a second implementation. The official repository is a Git submodule at `upstream/deepseek-harness`, and every installer records the exact upstream commit it contains.
-
-## Install
+## 安装
 
 ### macOS
 
-1. Download the `.dmg` matching your Mac architecture from [Releases](https://github.com/ouyangyipeng/dsh-desktop/releases/latest).
-2. Open the disk image and drag **DS-Harness Desktop** to **Applications**.
-3. Because early community builds are not notarized, macOS may require you to approve the app once in **System Settings → Privacy & Security** before opening it again.
+1. 从 [Releases](https://github.com/ouyangyipeng/dsh-desktop/releases/latest) 下载匹配的 `.dmg`；
+2. 打开镜像，把 **DS-Harness Desktop** 拖入 **Applications**；
+3. 当前社区构建未 notarize。若首次启动被阻止，请在 **系统设置 → 隐私与安全性** 中仅批准这一个应用，再重新打开。
 
 ### Windows
 
-1. Download the `.exe` matching your PC architecture from [Releases](https://github.com/ouyangyipeng/dsh-desktop/releases/latest).
-2. Run the installer and choose an installation directory.
-3. Because early community builds are unsigned, Microsoft Defender SmartScreen may show the publisher as unknown. Inspect the release checksum and use SmartScreen's normal review flow only if you trust this repository and artifact.
+下载匹配的 `.exe` 并运行。当前构建未签名；SmartScreen 显示未知发布者时，请先核对 Release 中的 `SHA256SUMS`，确认信任后再通过正常审查入口继续。本项目不会要求关闭 Gatekeeper、SmartScreen、杀毒软件或其他系统安全机制。
 
-Unsigned builds require an extra confirmation. This project does not ask users to disable Gatekeeper, SmartScreen, antivirus, or operating-system security controls.
+## Marketplace 与安全边界
 
-## Runtime and data
-
-The application starts its bundled `@deepseek-ai/dsh` CLI as:
+Desktop 内置的是“市场工具”，不是市场中的所有插件。社区插件安装后会以 Harness 宿主权限运行；安装前请检查源码、维护状态、许可和发布内容。Marketplace 禁止安装阶段的仓库生命周期脚本，并只接受预构建且声明标准 DSH bundle 的仓库，但这不等于第三方代码经过官方审计。
 
 ```text
-dsh web --host 127.0.0.1 --port 0
+dsh web --patch <desktop-owned-overlay> --host 127.0.0.1 --port 0
 ```
 
-The renderer loads only after the child announces a valid loopback URL and an HTTP readiness probe succeeds. Desktop assigns an isolated `DSH_HOME` below Electron's per-user application data directory, so it does not modify a separate CLI checkout or its Harness home. Existing Harness credential and provider behavior is unchanged; see the [official Harness documentation](https://github.com/deepseek-ai/deepseek-harness#readme) for runtime configuration.
+overlay、官方 Harness 和 Marketplace 均随安装包固定。已安装应用不会对 runtime 执行 `git pull`；更新必须通过经过 staging、测试、目标平台打包和 smoke 的 Desktop Release。
 
-Use **DS-Harness Desktop → About DS-Harness Desktop** to inspect the application version, Desktop commit, bundled upstream commit, and build target. Use **Open Logs Folder** if startup recovery asks for diagnostics.
+| 来源 | v0.2.0 固定方式 |
+| --- | --- |
+| Desktop | Release tag 与 `desktopCommit` |
+| 官方 Harness | `upstream/deepseek-harness` submodule |
+| Marketplace | `plugins/dsh-marketplace` submodule，v0.1.1 |
 
-## Updates
-
-Two update checks are deliberately separate:
-
-- **Check for Updates…** checks published `dsh-desktop` releases and can open a verified release page.
-- **Check Harness Updates…** compares the bundled upstream commit with the official Harness default branch and can open the official commit page.
-
-The second check never runs `git pull` inside an installed app. A newer upstream revision enters an installer only after the submodule update, build, tests, runtime staging, and target-native packaging checks pass in this repository. This keeps installed application contents immutable and reproducible.
-
-## Develop
-
-Requirements: Git, Node.js `^22.19.0 || >=24.0.0`, and pnpm `11.21.0`.
+## 开发
 
 ```bash
 git clone --recursive https://github.com/ouyangyipeng/dsh-desktop.git
 cd dsh-desktop
 pnpm install --frozen-lockfile
 pnpm upstream:bootstrap
-pnpm dev
-```
-
-Useful commands:
-
-```bash
-pnpm upstream:status
-pnpm upstream:update
 pnpm build
+pnpm runtime:stage -- --development
 pnpm test
 pnpm site:check
-pnpm runtime:stage -- --development
 pnpm run pack -- --development --mac --arm64
 ```
 
-Packaging is target-native: macOS installers are built on macOS, and Windows installers are built on Windows. See [Development](docs/development.md), [Architecture](docs/architecture.md), and [Releasing](docs/releasing.md) before changing staging or release behavior.
-
-## Repository roles
-
-```text
-src/main/                 Desktop lifecycle, security, recovery, and update checks
-scripts/                  Upstream, staging, packaging, and validation commands
-site/                     Static GitHub Pages product site
-tests/                    Unit, integration, snapshot, and policy tests
-upstream/deepseek-harness Official Harness source pinned as a Git submodule
-```
-
-The Desktop shell is a distribution companion rather than an in-process Harness plugin. Harness remains plugin-based internally; this repository stays outside that plugin graph so it can supervise startup, process ownership, installer updates, and recovery even when the Harness runtime cannot load.
-
-## Security and verification
-
-- Renderer sandboxing and context isolation stay enabled; Node integration and WebView attachment are disabled.
-- Navigation is limited to the exact runtime origin. Approved HTTPS links open in the system browser.
-- Renderer permissions and downloads are denied by default.
-- Runtime diagnostics are bounded and credential-like text is redacted before recovery rendering or clipboard copy.
-- Release artifacts publish SHA-256 checksums. Compare the downloaded file with `SHA256SUMS` before approving an unsigned build.
-
-Please report security-sensitive issues privately to the repository owner instead of publishing credentials or raw diagnostic logs in an issue.
-
-## License
-
-DS-Harness Desktop is licensed under [Apache License 2.0](LICENSE). The vendored or staged upstream components retain their own licenses and notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+修改 staging 或发布行为前请阅读[架构说明](docs/architecture.md)、[开发说明](docs/development.md)与[发布说明](docs/releasing.md)。Desktop 壳使用 [Apache License 2.0](LICENSE)，内置组件保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
