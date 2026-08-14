@@ -8,11 +8,14 @@ import {
 } from '../../src/main/build-metadata.ts'
 
 const validMetadata = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   version: '0.1.1',
   desktopCommit: 'a'.repeat(40),
   upstreamCommit: 'b'.repeat(40),
   upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+  marketplaceCommit: 'c'.repeat(40),
+  marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+  marketplaceVersion: '0.1.1',
   builtAt: '2026-08-13T15:00:00.000Z',
   platform: 'darwin',
   arch: 'arm64',
@@ -28,11 +31,14 @@ describe('desktop build metadata', () => {
     const metadata: DesktopBuildMetadata = developmentBuildMetadata('0.1.1')
 
     expect(metadata).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       version: '0.1.1',
       desktopCommit: 'development',
       upstreamCommit: '0'.repeat(40),
       upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      marketplaceCommit: 'development',
+      marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+      marketplaceVersion: 'development',
       platform: process.platform,
       arch: process.arch,
     })
@@ -42,11 +48,14 @@ describe('desktop build metadata', () => {
 
   it('parses development metadata written into an unsigned local package', () => {
     const metadata = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       version: '0.1.1',
       desktopCommit: 'development',
       upstreamCommit: 'b'.repeat(40),
       upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      marketplaceCommit: 'b'.repeat(40),
+      marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+      marketplaceVersion: '0.1.1',
       builtAt: '2026-08-14T04:00:00.000Z',
       platform: 'darwin',
       arch: 'arm64',
@@ -71,9 +80,12 @@ describe('desktop build metadata', () => {
   })
 
   it.each([
-    ['schema version', { schemaVersion: 2 }],
+    ['schema version', { schemaVersion: 1 }],
     ['desktop commit', { desktopCommit: 'main' }],
     ['upstream commit', { upstreamCommit: 'unknown' }],
+    ['Marketplace commit', { marketplaceCommit: 'unknown' }],
+    ['Marketplace repository', { marketplaceRepository: 'https://example.com/marketplace.git' }],
+    ['Marketplace version', { marketplaceVersion: '' }],
     ['build time', { builtAt: 'yesterday' }],
     ['release repository', { releaseRepository: 'owner/repo/extra' }],
     ['platform', { platform: 'browser' }],

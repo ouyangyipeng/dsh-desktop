@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { parseSubmoduleStatus } from '../../scripts/repository.ts'
+import {
+  parseMarketplaceManifest,
+  parseMarketplaceSubmoduleStatus,
+  parseSubmoduleStatus,
+} from '../../scripts/repository.ts'
 
 const SHA = 'a'.repeat(40)
 
@@ -26,5 +30,30 @@ describe('upstream submodule status', () => {
     ` ${SHA} upstream/deepseek-harness\n ${SHA} upstream/extra`,
   ])('rejects an unexpected status line: %j', (status) => {
     expect(() => parseSubmoduleStatus(status)).toThrow('unexpected')
+  })
+})
+
+describe('Marketplace submodule identity', () => {
+  it('accepts the exact clean Marketplace gitlink and manifest', () => {
+    expect(parseMarketplaceSubmoduleStatus(` ${SHA} plugins/dsh-marketplace (v0.1.1)\n`)).toEqual({ commit: SHA, clean: true })
+    expect(parseMarketplaceManifest({ name: 'dsh-marketplace', version: '0.1.1' })).toBe('0.1.1')
+  })
+
+  it.each([
+    [`-${SHA} plugins/dsh-marketplace`, 'uninitialized'],
+    [`+${SHA} plugins/dsh-marketplace`, 'does not match'],
+    [`U${SHA} plugins/dsh-marketplace`, 'conflict'],
+    [` ${SHA} upstream/deepseek-harness`, 'unexpected'],
+  ])('rejects unsafe Marketplace status %j', (status, message) => {
+    expect(() => parseMarketplaceSubmoduleStatus(status)).toThrow(message)
+  })
+
+  it.each([
+    [null, 'object'],
+    [{ name: 'other', version: '0.1.1' }, 'name'],
+    [{ name: 'dsh-marketplace', version: '' }, 'version'],
+    [{ name: 'dsh-marketplace', version: 'latest' }, 'version'],
+  ])('rejects invalid Marketplace manifest %#', (manifest, message) => {
+    expect(() => parseMarketplaceManifest(manifest)).toThrow(message)
   })
 })

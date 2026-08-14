@@ -11,6 +11,8 @@ const identity = {
 const commits = {
   desktopCommit: 'a'.repeat(40),
   upstreamCommit: 'b'.repeat(40),
+  marketplaceCommit: 'c'.repeat(40),
+  marketplaceVersion: '0.1.1',
 }
 
 describe('desktop stage metadata', () => {
@@ -18,11 +20,14 @@ describe('desktop stage metadata', () => {
     const metadata = resolveDesktopStageMetadata(['--development'], {}, identity, commits)
 
     expect(parseDesktopBuildMetadata(metadata)).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       version: '0.1.1',
       desktopCommit: 'development',
       upstreamCommit: 'b'.repeat(40),
       upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      marketplaceCommit: 'c'.repeat(40),
+      marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+      marketplaceVersion: '0.1.1',
       builtAt: '2026-08-14T04:00:00.000Z',
       platform: 'darwin',
       arch: 'arm64',
@@ -35,10 +40,11 @@ describe('desktop stage metadata', () => {
     }, identity, commits)
 
     expect(metadata).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       ...identity,
       ...commits,
       upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+      marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
       releaseRepository: 'ouyangyipeng/dsh-desktop',
     })
   })

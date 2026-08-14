@@ -8,11 +8,14 @@ const RELEASE_REPOSITORY = 'ouyangyipeng/dsh-desktop'
 
 function metadata(overrides: Partial<DesktopBuildMetadata> = {}): DesktopBuildMetadata {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     version: '1.9.9',
     desktopCommit: 'a'.repeat(40),
     upstreamCommit: 'b'.repeat(40),
     upstreamRepository: 'https://github.com/deepseek-ai/deepseek-harness.git',
+    marketplaceCommit: 'c'.repeat(40),
+    marketplaceRepository: 'https://github.com/ouyangyipeng/dsh-marketplace.git',
+    marketplaceVersion: '0.1.1',
     builtAt: '2026-08-13T15:00:00.000Z',
     platform: 'darwin',
     arch: 'arm64',
